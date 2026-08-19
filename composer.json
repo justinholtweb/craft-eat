@@ -1,0 +1,63 @@
+{
+    "name": "justinholtweb/craft-eat",
+    "description": "Product feeds for Craft Commerce — Google, Meta, Pinterest, Bing, TikTok and a dozen more, generated on a schedule and delivered wherever the channel wants them.",
+    "version": "5.0.0",
+    "type": "craft-plugin",
+    "keywords": [
+        "craftcms",
+        "craft-plugin",
+        "craft-commerce",
+        "commerce",
+        "product feed",
+        "google shopping",
+        "merchant center",
+        "facebook catalog",
+        "xml feed",
+        "csv feed"
+    ],
+    "license": "proprietary",
+    "authors": [
+        {
+            "name": "Justin Holt",
+            "homepage": "https://justinholt.com"
+        }
+    ],
+    "support": {
+        "email": "justin@justinholt.com"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "require": {
+        "php": "^8.2",
+        "ext-json": "*",
+        "ext-dom": "*",
+        "ext-openssl": "*",
+        "craftcms/cms": "^5.3.0",
+        "craftcms/commerce": "^5.0.0"
+    },
+    "suggest": {
+        "ext-ftp": "Needed to deliver feeds over FTP.",
+        "ext-zlib": "Needed to write gzipped feeds.",
+        "phpseclib/phpseclib": "Needed to deliver feeds over SFTP (^3.0)."
+    },
+    "autoload": {
+        "psr-4": {
+            "justinholtweb\\eat\\": "src/"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "craftcms/plugin-installer": true,
+            "yiisoft/yii2-composer": true
+        }
+    },
+    "extra": {
+        "name": "Eat",
+        "handle": "eat",
+        "developer": "Justin Holt",
+        "developerUrl": "https://justinholt.com",
+        "documentationUrl": "https://github.com/justinholtweb/craft-eat/blob/main/README.md",
+        "changelogUrl": "https://raw.githubusercontent.com/justinholtweb/craft-eat/main/CHANGELOG.md",
+        "class": "justinholtweb\\eat\\Plugin"
+    }
+}

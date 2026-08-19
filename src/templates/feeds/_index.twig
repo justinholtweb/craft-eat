@@ -1,0 +1,62 @@
+{% extends "_layouts/cp" %}
+
+{% set title = "Product feeds"|t('eat') %}
+{% set selectedSubnavItem = 'feeds' %}
+
+{% block actionButton %}
+    {% if canAdd %}
+        <a href="{{ newFeedUrl }}" class="btn submit add icon">{{ "New feed"|t('eat') }}</a>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    {% if not canAdd %}
+        <div class="pane" style="border-left: 3px solid #cdd8e4;">
+            <p>
+                <strong>{{ "You’re running Eat Lite."|t('eat') }}</strong>
+                {{ "Lite covers two feeds on the Google and Meta channels. Pro adds the other thirteen channels, output modifiers, the run log, FTP/SFTP and Merchant Center delivery."|t('eat') }}
+            </p>
+        </div>
+    {% endif %}
+
+    <div id="eat-feeds"></div>
+
+    {% if feeds|length %}
+        <h2 style="margin-top: 24px;">{{ "Feed URLs"|t('eat') }}</h2>
+        <div class="pane">
+            <table class="data fullwidth">
+                <thead>
+                    <tr>
+                        <th>{{ "Feed"|t('eat') }}</th>
+                        <th>{{ "URL to give the channel"|t('eat') }}</th>
+                        <th>{{ "Last run"|t('eat') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for feed in feeds %}
+                        {% set run = runs[feed.id] ?? null %}
+                        <tr>
+                            <td><a href="{{ feed.getCpEditUrl() }}">{{ feed.name }}</a></td>
+                            <td>
+                                {% if feed.getUrl() %}
+                                    <code style="word-break: break-all;">{{ feed.getUrl() }}</code>
+                                {% else %}
+                                    <span class="light">{{ "Delivered directly to the channel."|t('eat') }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if run %}
+                                    {{ run.itemCount }} {{ "products"|t('eat') }},
+                                    <span class="{{ run.status == 'error' ? 'error' : '' }}">{{ run.status }}</span>
+                                    <span class="light">— {{ run.dateCreated ? run.dateCreated|datetime('short') : '' }}</span>
+                                {% else %}
+                                    <span class="light">{{ "Never"|t('eat') }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "_layouts/cp" %}
+
+{% set title = "Feed runs"|t('eat') %}
+{% set selectedSubnavItem = 'runs' %}
+
+{% block content %}
+    <div class="flex" style="margin-bottom: 14px;">
+        <a class="btn{{ feedId ? '' : ' active' }}" href="{{ url('eat/runs') }}">{{ "All feeds"|t('eat') }}</a>
+        {% for id, feed in feeds %}
+            <a class="btn{{ feedId == id ? ' active' : '' }}" href="{{ url('eat/runs', { feedId: id }) }}">{{ feed.name }}</a>
+        {% endfor %}
+    </div>
+
+    {% if runs|length %}
+        <table class="data fullwidth">
+            <thead>
+                <tr>
+                    <th>{{ "When"|t('eat') }}</th>
+                    <th>{{ "Feed"|t('eat') }}</th>
+                    <th>{{ "Status"|t('eat') }}</th>
+                    <th>{{ "Products"|t('eat') }}</th>
+                    <th>{{ "Skipped"|t('eat') }}</th>
+                    <th>{{ "Size"|t('eat') }}</th>
+                    <th>{{ "Took"|t('eat') }}</th>
+                    <th>{{ "Trigger"|t('eat') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for run in runs %}
+                    <tr>
+                        <td><a href="{{ url('eat/runs/' ~ run.id) }}">{{ run.dateCreated ? run.dateCreated|datetime('short') : '—' }}</a></td>
+                        <td>{{ feeds[run.feedId] is defined ? feeds[run.feedId].name : run.feedId }}</td>
+                        <td>
+                            {% if run.status == 'success' %}
+                                <span class="status green"></span>{{ "Success"|t('eat') }}
+                            {% elseif run.status == 'partial' %}
+                                <span class="status orange"></span>{{ "Partial"|t('eat') }}
+                            {% else %}
+                                <span class="status red"></span>{{ "Error"|t('eat') }}
+                            {% endif %}
+                        </td>
+                        <td>{{ run.itemCount }}</td>
+                        <td>{{ run.skippedCount }}</td>
+                        <td>{{ run.getSizeLabel() }}</td>
+                        <td>{{ run.durationMs }}ms</td>
+                        <td class="light">{{ run.trigger }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        {% if total > perPage %}
+            <div class="flex" style="margin-top: 14px;">
+                {% if page > 1 %}
+                    <a class="btn" href="{{ url('eat/runs', { feedId: feedId, page: page - 1 }) }}">{{ "Previous"|t('app') }}</a>
+                {% endif %}
+                {% if page * perPage < total %}
+                    <a class="btn" href="{{ url('eat/runs', { feedId: feedId, page: page + 1 }) }}">{{ "Next"|t('app') }}</a>
+                {% endif %}
+                <span class="light" style="align-self: center;">{{ total }} {{ "runs"|t('eat') }}</span>
+            </div>
+        {% endif %}
+    {% else %}
+        <p class="light">{{ "No runs yet."|t('eat') }}</p>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,122 @@
+{# Field names carry no `settings[…]` prefix: `craft\base\Plugin::settingsResponse()` runs this
+   template's output through `View::namespaceInputs(…, 'settings')`, so a name written as
+   `settings[foo]` here posts as `settings[settings][foo]` and saves nothing at all. #}
+{% import '_includes/forms' as forms %}
+
+{% set isPro = plugin.isPro() %}
+{% set commerceReady = craft.app.plugins.isPluginEnabled('commerce') %}
+
+{% if not commerceReady %}
+    <div class="pane">
+        <p class="error">{{ 'Craft Commerce is not installed or enabled. Eat needs it to have anything to feed on.'|t('eat') }}</p>
+    </div>
+{% endif %}
+
+{% if not isPro %}
+    <div class="pane" style="border-left: 3px solid #cdd8e4;">
+        <p>
+            <strong>{{ 'You’re running Eat Lite.'|t('eat') }}</strong>
+            {{ 'Lite covers two feeds on the Google and Meta channels, written to a file on a schedule. Pro adds the other thirteen channels and the custom builder, output modifiers, condition matching, the run log, live URLs, asset volume / FTP / SFTP delivery, Merchant Center push and the console commands.'|t('eat') }}
+        </p>
+    </div>
+{% endif %}
+
+<h2>{{ 'Files'|t('eat') }}</h2>
+
+{{ forms.autosuggestField({
+    label: 'Feed directory'|t('eat'),
+    instructions: 'Where generated feeds are written, relative to the web root. An absolute path or alias works too.'|t('eat'),
+    id: 'feedDirectory',
+    name: 'feedDirectory',
+    suggestEnvVars: true,
+    value: settings.feedDirectory,
+    errors: settings.getErrors('feedDirectory')
+}) }}
+
+<div class="pane">
+    <p class="light">
+        {{ 'Feeds are currently written to'|t('eat') }} <code>{{ settings.getFeedDirectory() }}</code>
+        {{ 'and served from'|t('eat') }} <code>{{ settings.getFeedUrlBase() }}</code>.
+    </p>
+</div>
+
+{{ forms.autosuggestField({
+    label: 'Default brand'|t('eat'),
+    instructions: 'What fills the `brand` attribute when nothing else does. Google and Meta both require it.'|t('eat'),
+    id: 'defaultBrand',
+    name: 'defaultBrand',
+    suggestEnvVars: true,
+    placeholder: craft.app.systemName,
+    value: settings.defaultBrand,
+    errors: settings.getErrors('defaultBrand')
+}) }}
+
+{{ forms.textField({
+    label: 'Image transform'|t('eat'),
+    instructions: 'A named transform handle applied to feed images, unless a feed overrides it.'|t('eat'),
+    id: 'imageTransform',
+    name: 'imageTransform',
+    class: 'code',
+    value: settings.imageTransform,
+    errors: settings.getErrors('imageTransform')
+}) }}
+
+<h2>{{ 'Generating'|t('eat') }}</h2>
+
+{{ forms.lightswitchField({
+    label: 'Generate in the queue'|t('eat'),
+    instructions: 'Leave this on. A catalogue of any size takes longer than a control panel request should.'|t('eat'),
+    id: 'generateInQueue',
+    name: 'generateInQueue',
+    on: settings.generateInQueue
+}) }}
+
+{{ forms.lightswitchField({
+    label: 'Schedule from web requests'|t('eat'),
+    instructions: 'For sites without cron: after a front-end request, queue anything whose schedule is up. Throttled to once a minute. Turn it off when you run `eat/feeds/generate --due` from real cron.'|t('eat'),
+    id: 'scheduleOnRequest',
+    name: 'scheduleOnRequest',
+    on: settings.scheduleOnRequest
+}) }}
+
+{{ forms.textField({
+    label: 'Batch size'|t('eat'),
+    instructions: 'Products read from the database at a time.'|t('eat'),
+    id: 'batchSize',
+    name: 'batchSize',
+    size: 6,
+    value: settings.batchSize,
+    errors: settings.getErrors('batchSize')
+}) }}
+
+<h2>{{ 'Live URLs'|t('eat') }}</h2>
+
+{{ forms.lightswitchField({
+    label: 'Enable live feed routes'|t('eat'),
+    instructions: 'Serve feeds from `/eat/feed/<handle>` as well as from the written file.'|t('eat'),
+    id: 'enableLiveRoutes',
+    name: 'enableLiveRoutes',
+    on: settings.enableLiveRoutes
+}) }}
+
+{{ forms.textField({
+    label: 'Live feed cache duration'|t('eat'),
+    instructions: 'Seconds a generated-on-request feed is cached for, when the feed has no schedule.'|t('eat'),
+    id: 'liveCacheDuration',
+    name: 'liveCacheDuration',
+    size: 8,
+    value: settings.liveCacheDuration,
+    errors: settings.getErrors('liveCacheDuration')
+}) }}
+
+<h2>{{ 'Run log'|t('eat') }}</h2>
+
+{{ forms.textField({
+    label: 'Runs to keep'|t('eat'),
+    instructions: 'Per feed. 0 keeps everything.'|t('eat'),
+    id: 'runsToKeep',
+    name: 'runsToKeep',
+    size: 6,
+    value: settings.runsToKeep,
+    errors: settings.getErrors('runsToKeep')
+}) }}

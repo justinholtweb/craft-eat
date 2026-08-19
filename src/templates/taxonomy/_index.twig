@@ -1,0 +1,63 @@
+{% extends "_layouts/cp" %}
+{% import "_includes/forms" as forms %}
+
+{% set title = "Taxonomy mapping"|t('eat') %}
+{% set selectedSubnavItem = 'taxonomy' %}
+{% set fullPageForm = true %}
+
+{% block content %}
+    {{ actionInput('eat/taxonomy/save') }}
+    {{ hiddenInput('channel', channel) }}
+
+    <div class="flex" style="margin-bottom: 14px;">
+        {% for id, definition in channels %}
+            <a class="btn{{ id == channel ? ' active' : '' }}" href="{{ url('eat/taxonomy/' ~ id) }}">{{ definition.name }}</a>
+        {% endfor %}
+    </div>
+
+    <p class="light">
+        {{ "Every feed on this channel uses this map — the channel’s taxonomy doesn’t change because you made a second feed."|t('eat') }}
+        {% if channels[channel] is defined and channels[channel].docsUrl %}
+            <a href="{{ channels[channel].docsUrl }}" rel="noopener" target="_blank">{{ "Channel documentation"|t('eat') }}</a>
+        {% endif %}
+    </p>
+
+    {% if rows|length %}
+        <div class="pane">
+            <table class="data fullwidth">
+                <thead>
+                    <tr>
+                        <th style="width: 260px;">{{ "Product type"|t('eat') }}</th>
+                        <th>{{ "Channel category"|t('eat') }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                        <tr>
+                            <th>
+                                {{ row.name }}
+                                <span class="light code">{{ row.handle }}</span>
+                            </th>
+                            <td>
+                                {{ forms.text({
+                                    name: 'values[' ~ row.handle ~ ']',
+                                    value: row.value,
+                                    placeholder: 'Apparel & Accessories > Clothing > Shirts & Tops'
+                                }) }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="light">{{ "No product types to map yet."|t('eat') }}</p>
+    {% endif %}
+
+    {% if usedBy|length %}
+        <p class="light">
+            {{ "Used by:"|t('eat') }}
+            {% for feed in usedBy %}<a href="{{ feed.getCpEditUrl() }}">{{ feed.name }}</a>{{ not loop.last ? ', ' }}{% endfor %}
+        </p>
+    {% endif %}
+{% endblock %}

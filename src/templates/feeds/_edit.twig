@@ -1,0 +1,627 @@
+{% extends "_layouts/cp" %}
+{% import "_includes/forms" as forms %}
+
+{% set selectedSubnavItem = 'feeds' %}
+{% set fullPageForm = true %}
+{% set crumbs = [{ label: "Product feeds"|t('eat'), url: url('eat/feeds') }] %}
+
+{% set filters = feed.getFilters() %}
+{% set options = feed.getOptions() %}
+{% set delivery = feed.getDelivery() %}
+
+{% set tabs = {
+    setup: { label: "Setup"|t('eat'), url: '#setup-tab' },
+    products: { label: "Products"|t('eat'), url: '#products-tab' },
+    attributes: { label: "Attributes"|t('eat'), url: '#attributes-tab' },
+    delivery: { label: "Delivery"|t('eat'), url: '#delivery-tab' },
+    schedule: { label: "Schedule"|t('eat'), url: '#schedule-tab' },
+} %}
+
+{% block details %}
+    <div class="meta">
+        {{ forms.lightswitchField({
+            label: "Enabled"|t('eat'),
+            id: 'enabled',
+            name: 'enabled',
+            on: feed.enabled
+        }) }}
+    </div>
+
+    {% if feed.id %}
+        <div class="meta read-only">
+            {% if feed.getUrl() %}
+                <div class="data">
+                    <h5 class="heading">{{ "Feed URL"|t('eat') }}</h5>
+                    <div class="value" style="word-break: break-all;"><a href="{{ feed.getUrl() }}" rel="noopener" target="_blank">{{ feed.getUrl() }}</a></div>
+                </div>
+            {% endif %}
+            <div class="data">
+                <h5 class="heading">{{ "Last generated"|t('eat') }}</h5>
+                <div class="value">
+                    {% if lastRun %}
+                        {{ lastRun.itemCount }} {{ "products"|t('eat') }}, {{ lastRun.getSizeLabel() }}
+                        <span class="light">{{ lastRun.dateCreated ? lastRun.dateCreated|datetime('short') : '' }}</span>
+                    {% else %}
+                        <span class="light">{{ "Never"|t('eat') }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% if lastRun and lastRun.message %}
+                <div class="data">
+                    <h5 class="heading">{{ "Last message"|t('eat') }}</h5>
+                    <div class="value error">{{ lastRun.message }}</div>
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="meta">
+            <div class="field">
+                <div class="input">
+                    <button type="button" id="eat-generate" class="btn">{{ "Generate now"|t('eat') }}</button>
+                    <button type="button" id="eat-preview" class="btn">{{ "Preview"|t('eat') }}</button>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    {{ actionInput('eat/feeds/save') }}
+    {{ redirectInput('eat/feeds') }}
+    {% if feed.id %}{{ hiddenInput('id', feed.id) }}{% endif %}
+
+    {# ---------------------------------------------------------------- Setup #}
+    <div id="setup-tab">
+        {{ forms.textField({
+            first: true,
+            label: "Name"|t('eat'),
+            id: 'name',
+            name: 'name',
+            value: feed.name,
+            errors: feed.getErrors('name'),
+            autofocus: true,
+            required: true
+        }) }}
+
+        {{ forms.textField({
+            label: "Handle"|t('app'),
+            instructions: "Used in the file name, the live URL and the console commands."|t('eat'),
+            id: 'handle',
+            name: 'handle',
+            class: 'code',
+            value: feed.handle,
+            errors: feed.getErrors('handle'),
+            required: true
+        }) }}
+
+        {{ forms.selectField({
+            label: "Channel"|t('eat'),
+            instructions: "Changing the channel reloads that channel’s attribute list when you save."|t('eat'),
+            id: 'channel',
+            name: 'channel',
+            options: channelOptions,
+            value: feed.channel,
+            errors: feed.getErrors('channel')
+        }) }}
+
+        {% if channel %}
+            <div class="pane" style="margin-bottom: 24px;">
+                <p>
+                    <strong>{{ channel.name }}</strong> — {{ channel.description }}
+                    {% if channel.docsUrl %}
+                        <a href="{{ channel.docsUrl }}" rel="noopener" target="_blank">{{ "Specification"|t('eat') }}</a>
+                    {% endif %}
+                </p>
+                <p class="light">
+                    {{ "Required attributes:"|t('eat') }}
+                    {% for key in channel.getRequiredKeys() %}<code>{{ key }}</code>{{ not loop.last ? ' ' }}{% endfor %}
+                    {% if channel.getRequiredKeys() is empty %}<span class="light">{{ "none"|t('eat') }}</span>{% endif %}
+                </p>
+            </div>
+        {% endif %}
+
+        {{ forms.selectField({
+            label: "Format"|t('eat'),
+            id: 'format',
+            name: 'format',
+            options: formatOptions,
+            value: feed.format,
+            errors: feed.getErrors('format')
+        }) }}
+
+        {{ forms.selectField({
+            label: "Site"|t('eat'),
+            instructions: "Products, URLs and prices come from this site."|t('eat'),
+            id: 'siteId',
+            name: 'siteId',
+            options: siteOptions,
+            value: feed.siteId
+        }) }}
+
+        {{ forms.selectField({
+            label: "Store"|t('eat'),
+            id: 'storeId',
+            name: 'storeId',
+            options: storeOptions,
+            value: feed.storeId
+        }) }}
+
+        {{ forms.selectField({
+            label: "Rows"|t('eat'),
+            id: 'variantMode',
+            name: 'variantMode',
+            options: variantModeOptions,
+            value: feed.variantMode
+        }) }}
+
+        <hr>
+
+        {{ forms.textField({
+            label: "Currency"|t('eat'),
+            instructions: "Leave empty to use the store’s currency."|t('eat'),
+            name: 'options[currency]',
+            value: options.currency,
+            size: 6,
+            placeholder: 'USD'
+        }) }}
+
+        {{ forms.textField({
+            label: "Price multiplier"|t('eat'),
+            instructions: "Multiply every price by this, e.g. `1.2` for a channel you want to price higher on. Leave empty for the real price."|t('eat'),
+            name: 'options[priceMultiplier]',
+            value: options.priceMultiplier,
+            size: 6
+        }) }}
+
+        <h2>{{ "Link tagging"|t('eat') }}</h2>
+        <div class="flex">
+            {{ forms.textField({ label: 'utm_source', name: 'options[utmSource]', value: options.utmSource, size: 14 }) }}
+            {{ forms.textField({ label: 'utm_medium', name: 'options[utmMedium]', value: options.utmMedium, size: 14 }) }}
+            {{ forms.textField({ label: 'utm_campaign', name: 'options[utmCampaign]', value: options.utmCampaign, size: 14 }) }}
+            {{ forms.textField({ label: 'utm_term', name: 'options[utmTerm]', value: options.utmTerm, size: 14 }) }}
+            {{ forms.textField({ label: 'utm_content', name: 'options[utmContent]', value: options.utmContent, size: 14 }) }}
+        </div>
+    </div>
+
+    {# ------------------------------------------------------------- Products #}
+    <div id="products-tab" class="hidden">
+        {{ forms.checkboxSelectField({
+            label: "Product types"|t('eat'),
+            instructions: "Leave everything unchecked to include every product type."|t('eat'),
+            name: 'filters[productTypes]',
+            options: typeOptions,
+            values: filters.productTypes
+        }) }}
+
+        {{ forms.checkboxSelectField({
+            label: "Statuses"|t('eat'),
+            name: 'filters[statuses]',
+            options: statusOptions,
+            values: filters.statuses
+        }) }}
+
+        {{ forms.lightswitchField({
+            label: "In stock only"|t('eat'),
+            instructions: "Skip tracked variants with no stock. Most channels would rather have them marked out of stock than missing."|t('eat'),
+            name: 'filters[inStockOnly]',
+            on: filters.inStockOnly
+        }) }}
+
+        {{ forms.lightswitchField({
+            label: "Require an image"|t('eat'),
+            name: 'filters[requireImage]',
+            on: filters.requireImage
+        }) }}
+
+        {{ forms.lightswitchField({
+            label: "Require a price"|t('eat'),
+            instructions: "Skip anything priced at zero — every channel rejects those anyway."|t('eat'),
+            name: 'filters[requirePrice]',
+            on: filters.requirePrice
+        }) }}
+
+        {{ forms.lightswitchField({
+            label: "Include disabled variants"|t('eat'),
+            name: 'filters[includeDisabledVariants]',
+            on: filters.includeDisabledVariants
+        }) }}
+
+        <div class="flex">
+            {{ forms.textField({ label: "Minimum price"|t('eat'), name: 'filters[minPrice]', value: filters.minPrice, size: 8 }) }}
+            {{ forms.textField({ label: "Maximum price"|t('eat'), name: 'filters[maxPrice]', value: filters.maxPrice, size: 8 }) }}
+            {{ forms.textField({ label: "Row limit"|t('eat'), name: 'filters[limit]', value: filters.limit, size: 8 }) }}
+        </div>
+
+        {{ forms.textareaField({
+            label: "Exclude SKUs"|t('eat'),
+            instructions: "One per line. `*` works: `SAMPLE-*` skips every sample."|t('eat'),
+            name: 'filters[excludeSkus]',
+            class: 'code',
+            rows: 3,
+            value: filters.excludeSkus|join("\n")
+        }) }}
+
+        {{ forms.textareaField({
+            label: "Exclude product IDs"|t('eat'),
+            instructions: "One per line."|t('eat'),
+            name: 'filters[excludeIds]',
+            class: 'code',
+            rows: 2,
+            value: filters.excludeIds|join("\n")
+        }) }}
+
+        <hr>
+
+        {% if isPro %}
+            {% set conditionInput %}
+                {{ feed.getProductCondition().getBuilderHtml()|raw }}
+            {% endset %}
+
+            {{ forms.field({
+                label: "Match products"|t('eat'),
+                instructions: "Every condition here has to pass, on top of the filters above."|t('eat')
+            }, conditionInput) }}
+        {% else %}
+            <p class="light">{{ "Condition-builder matching is a Pro feature."|t('eat') }}</p>
+        {% endif %}
+    </div>
+
+    {# ----------------------------------------------------------- Attributes #}
+    <div id="attributes-tab" class="hidden">
+        <p class="light">
+            {{ "Each row fills one of the channel’s attributes. Rows in this order become the columns of a CSV or the elements of an XML item."|t('eat') }}
+        </p>
+
+        {{ forms.editableTableField({
+            label: "Attribute map"|t('eat'),
+            id: 'mappings',
+            name: 'mappings',
+            cols: {
+                attribute: { heading: "Attribute"|t('eat'), type: 'singleline', class: 'code', width: 200 },
+                source: { heading: "Source"|t('eat'), type: 'select', options: sourceOptions },
+                value: { heading: "Value"|t('eat'), type: 'singleline', class: 'code' },
+                modifiers: { heading: "Modifiers"|t('eat'), type: 'singleline', class: 'code' },
+                enabled: { heading: "On"|t('eat'), type: 'lightswitch', thin: true }
+            },
+            rows: mappingRows,
+            addRowLabel: "Add an attribute"|t('eat'),
+            allowAdd: true,
+            allowDelete: true,
+            allowReorder: true,
+            errors: feed.getErrors('mappings')
+        }) }}
+
+        <div class="pane">
+            <h2>{{ "What goes in Value"|t('eat') }}</h2>
+            <table class="data fullwidth">
+                <tbody>
+                    <tr><th style="width: 200px;">{{ "Product attribute"|t('eat') }}</th><td>{{ "one of the names below, e.g."|t('eat') }} <code>sku</code></td></tr>
+                    <tr><th>{{ "Custom field"|t('eat') }}</th><td>{{ "a field handle, optionally with a path:"|t('eat') }} <code>gallery.0.url</code></td></tr>
+                    <tr><th>{{ "Static value"|t('eat') }}</th><td>{{ "the literal text to write in every row"|t('eat') }}</td></tr>
+                    <tr><th>{{ "Taxonomy map"|t('eat') }}</th><td><code>productType</code> {{ "or a field handle to map from"|t('eat') }}</td></tr>
+                    <tr><th>{{ "Twig template"|t('eat') }}</th><td><code>{% verbatim %}{{ object.product.title }}{% endverbatim %}</code> — <code>object</code> {{ "is the variant"|t('eat') }}{{ isPro ? '' : ' (' ~ "Pro"|t('eat') ~ ')' }}</td></tr>
+                </tbody>
+            </table>
+
+            <h2>{{ "Modifiers"|t('eat') }}{{ isPro ? '' : ' — ' ~ "Pro"|t('eat') }}</h2>
+            <p class="light">
+                {{ "Chain them with `|`, arguments after `:` — e.g."|t('eat') }}
+                <code>strip_tags | collapse_whitespace | truncate:150:…</code>
+            </p>
+            <p class="light">
+                {% for type, label in modifierTypes %}<code>{{ type }}</code>{{ not loop.last ? ' · ' }}{% endfor %}
+            </p>
+
+            <h2>{{ "Product attributes"|t('eat') }}</h2>
+            {% for group, attributes in attributeGroups %}
+                <h5 class="heading">{{ group }}</h5>
+                <p class="light">
+                    {% for name, label in attributes %}<code>{{ name }}</code> <span class="light">{{ label }}</span>{{ not loop.last ? ' · ' }}{% endfor %}
+                </p>
+            {% endfor %}
+        </div>
+
+        <div id="eat-preview-pane" class="pane hidden">
+            <h2>{{ "Preview"|t('eat') }}</h2>
+            <div id="eat-preview-body"></div>
+        </div>
+    </div>
+
+    {# ------------------------------------------------------------- Delivery #}
+    <div id="delivery-tab" class="hidden">
+        {{ forms.selectField({
+            label: "Where the feed goes"|t('eat'),
+            id: 'deliveryMode',
+            name: 'delivery[mode]',
+            options: deliveryOptions,
+            value: delivery.mode,
+            toggle: true,
+            targetPrefix: 'delivery-'
+        }) }}
+
+        {{ forms.textField({
+            label: "File name"|t('eat'),
+            instructions: "Leave empty for `{handle}.{ext}`."|t('eat', { handle: feed.handle ?? 'handle', ext: feed.getExtension() }),
+            name: 'delivery[path]',
+            class: 'code',
+            value: delivery.path
+        }) }}
+
+        {{ forms.lightswitchField({
+            label: "Gzip the file"|t('eat'),
+            instructions: "Google, Meta and Bing all accept `.gz`, and a 40 MB feed becomes 3 MB."|t('eat'),
+            name: 'options[compress]',
+            on: options.compress
+        }) }}
+
+        <div id="delivery-volume" class="{{ delivery.mode == 'volume' ? '' : 'hidden' }}">
+            {{ forms.selectField({
+                label: "Volume"|t('eat'),
+                name: 'delivery[volumeId]',
+                options: volumeOptions,
+                value: delivery.volumeId
+            }) }}
+
+            {{ forms.textField({
+                label: "Subpath"|t('eat'),
+                name: 'delivery[volumePath]',
+                class: 'code',
+                value: delivery.volumePath,
+                placeholder: 'feeds'
+            }) }}
+        </div>
+
+        <div id="delivery-ftp" class="{{ delivery.mode == 'ftp' ? '' : 'hidden' }}">
+            {{ forms.autosuggestField({
+                label: "Host"|t('eat'),
+                name: 'delivery[ftp][host]',
+                suggestEnvVars: true,
+                value: delivery.ftp.host
+            }) }}
+            {{ forms.textField({ label: "Port"|t('eat'), name: 'delivery[ftp][port]', value: delivery.ftp.port, size: 6 }) }}
+            {{ forms.autosuggestField({ label: "Username"|t('eat'), name: 'delivery[ftp][username]', suggestEnvVars: true, value: delivery.ftp.username }) }}
+            {{ forms.autosuggestField({ label: "Password"|t('eat'), name: 'delivery[ftp][password]', suggestEnvVars: true, value: delivery.ftp.password, instructions: "Use an environment variable — this is stored in the database."|t('eat') }) }}
+            {{ forms.textField({ label: "Remote path"|t('eat'), name: 'delivery[ftp][path]', class: 'code', value: delivery.ftp.path, placeholder: '/feeds/' }) }}
+            {{ forms.lightswitchField({ label: "Passive mode"|t('eat'), name: 'delivery[ftp][passive]', on: delivery.ftp.passive }) }}
+            {{ forms.lightswitchField({ label: "Explicit FTPS"|t('eat'), name: 'delivery[ftp][secure]', on: delivery.ftp.secure }) }}
+        </div>
+
+        <div id="delivery-sftp" class="{{ delivery.mode == 'sftp' ? '' : 'hidden' }}">
+            {{ forms.autosuggestField({ label: "Host"|t('eat'), name: 'delivery[sftp][host]', suggestEnvVars: true, value: delivery.sftp.host }) }}
+            {{ forms.textField({ label: "Port"|t('eat'), name: 'delivery[sftp][port]', value: delivery.sftp.port, size: 6 }) }}
+            {{ forms.autosuggestField({ label: "Username"|t('eat'), name: 'delivery[sftp][username]', suggestEnvVars: true, value: delivery.sftp.username }) }}
+            {{ forms.autosuggestField({ label: "Password or key passphrase"|t('eat'), name: 'delivery[sftp][password]', suggestEnvVars: true, value: delivery.sftp.password }) }}
+            {{ forms.autosuggestField({ label: "Private key"|t('eat'), instructions: "A path to a key file, or the key itself."|t('eat'), name: 'delivery[sftp][privateKey]', suggestEnvVars: true, value: delivery.sftp.privateKey }) }}
+            {{ forms.textField({ label: "Remote path"|t('eat'), name: 'delivery[sftp][path]', class: 'code', value: delivery.sftp.path }) }}
+        </div>
+
+        <div id="delivery-merchant" class="{{ delivery.mode == 'merchant' ? '' : 'hidden' }}">
+            {{ forms.autosuggestField({
+                label: "Merchant Center account ID"|t('eat'),
+                name: 'delivery[merchant][merchantId]',
+                suggestEnvVars: true,
+                id: 'merchantId',
+                value: delivery.merchant.merchantId
+            }) }}
+            {{ forms.autosuggestField({
+                label: "Service account credentials"|t('eat'),
+                instructions: "The path to a service-account JSON key file (keep it out of the web root), or an environment variable holding the JSON."|t('eat'),
+                name: 'delivery[merchant][serviceAccount]',
+                suggestEnvVars: true,
+                id: 'serviceAccount',
+                value: delivery.merchant.serviceAccount
+            }) }}
+            <div class="flex">
+                {{ forms.textField({ label: "Target country"|t('eat'), name: 'delivery[merchant][targetCountry]', value: delivery.merchant.targetCountry, size: 4 }) }}
+                {{ forms.textField({ label: "Content language"|t('eat'), name: 'delivery[merchant][contentLanguage]', value: delivery.merchant.contentLanguage, size: 4 }) }}
+                {{ forms.textField({ label: "Channel"|t('eat'), name: 'delivery[merchant][channel]', value: delivery.merchant.channel, size: 8 }) }}
+            </div>
+            <div class="field">
+                <div class="input">
+                    <button type="button" id="eat-test-merchant" class="btn">{{ "Test the connection"|t('eat') }}</button>
+                </div>
+            </div>
+        </div>
+
+        <hr>
+
+        {{ forms.lightswitchField({
+            label: "Serve a live URL"|t('eat'),
+            instructions: "Generate on request at `/eat/feed/{handle}` instead of only serving the written file. Cached for the schedule interval."|t('eat', { handle: feed.handle ?? 'handle' }),
+            name: 'options[liveRoute]',
+            on: options.liveRoute
+        }) }}
+    </div>
+
+    {# ------------------------------------------------------------- Schedule #}
+    <div id="schedule-tab" class="hidden">
+        {{ forms.selectField({
+            label: "Regenerate"|t('eat'),
+            id: 'interval',
+            name: 'interval',
+            options: intervalOptions,
+            value: feed.interval
+        }) }}
+
+        <p class="light">
+            {{ "For a real schedule, run this from cron:"|t('eat') }}
+            <code>*/15 * * * * cd /path/to/site &amp;&amp; php craft eat/feeds/generate --due</code>
+        </p>
+
+        {{ forms.lightswitchField({
+            label: "Regenerate when a product is saved"|t('eat'),
+            instructions: "Queued and debounced, so resaving a whole section costs one job."|t('eat'),
+            name: 'regenerateOnSave',
+            on: feed.regenerateOnSave,
+            disabled: not isPro
+        }) }}
+
+        <hr>
+
+        {{ forms.lightswitchField({
+            label: "Write a header row"|t('eat'),
+            instructions: "CSV and TSV only."|t('eat'),
+            name: 'options[includeHeader]',
+            on: options.includeHeader
+        }) }}
+
+        {{ forms.lightswitchField({
+            label: "Skip incomplete products"|t('eat'),
+            instructions: "Leave a product out when it has nothing for one of the channel’s required attributes. Off means the channel rejects it instead."|t('eat'),
+            name: 'options[skipIncomplete]',
+            on: options.skipIncomplete
+        }) }}
+
+        <div class="flex">
+            {{ forms.textField({ label: "CSV delimiter"|t('eat'), name: 'options[delimiter]', value: options.delimiter, size: 2 }) }}
+            {{ forms.textField({ label: "CSV enclosure"|t('eat'), name: 'options[enclosure]', value: options.enclosure, size: 2 }) }}
+            {{ forms.textField({ label: "Batch size"|t('eat'), name: 'options[batchSize]', value: options.batchSize, size: 5 }) }}
+        </div>
+
+        {{ forms.textField({
+            label: "Image transform"|t('eat'),
+            instructions: "A named transform handle to apply to every feed image."|t('eat'),
+            name: 'options[imageTransform]',
+            class: 'code',
+            value: options.imageTransform
+        }) }}
+
+        <h2>{{ "XML"|t('eat') }}</h2>
+        <div class="flex">
+            {{ forms.textField({ label: "Root element"|t('eat'), name: 'options[xmlRoot]', class: 'code', value: options.xmlRoot, placeholder: channel ? channel.xmlRoot : 'products' }) }}
+            {{ forms.textField({ label: "Item element"|t('eat'), name: 'options[xmlItem]', class: 'code', value: options.xmlItem, placeholder: channel ? channel.xmlItem : 'product' }) }}
+            {{ forms.textField({ label: "JSON wrapper"|t('eat'), name: 'options[jsonWrapper]', class: 'code', value: options.jsonWrapper }) }}
+        </div>
+        <div class="flex">
+            {{ forms.textField({ label: "Feed title"|t('eat'), name: 'options[feedTitle]', value: options.feedTitle }) }}
+            {{ forms.textField({ label: "Feed link"|t('eat'), name: 'options[feedLink]', value: options.feedLink }) }}
+            {{ forms.textField({ label: "Feed description"|t('eat'), name: 'options[feedDescription]', value: options.feedDescription }) }}
+        </div>
+    </div>
+{% endblock %}
+
+{% if feed.id %}
+    {% js %}
+        (function() {
+            var feedId = {{ feed.id }};
+
+            var button = document.getElementById('eat-generate');
+            if (button) {
+                button.addEventListener('click', function() {
+                    button.classList.add('disabled');
+                    Craft.sendActionRequest('POST', 'eat/feeds/generate', { data: { id: feedId, now: 1 } })
+                        .then(function(response) {
+                            Craft.cp.displayNotice(response.data.message);
+                            window.location.reload();
+                        })
+                        .catch(function(error) {
+                            Craft.cp.displayError((error.response && error.response.data && error.response.data.message) || Craft.t('eat', 'Couldn’t generate the feed.'));
+                            button.classList.remove('disabled');
+                        });
+                });
+            }
+
+            var preview = document.getElementById('eat-preview');
+            if (preview) {
+                preview.addEventListener('click', function() {
+                    var form = preview.closest('form');
+                    var data = new FormData(form);
+                    data.append('id', feedId);
+                    data.append('limit', 5);
+
+                    preview.classList.add('disabled');
+
+                    Craft.sendActionRequest('POST', 'eat/feeds/preview', { data: data })
+                        .then(function(response) {
+                            renderPreview(response.data);
+                        })
+                        .catch(function(error) {
+                            Craft.cp.displayError((error.response && error.response.data && error.response.data.message) || Craft.t('eat', 'Couldn’t preview the feed.'));
+                        })
+                        .finally(function() {
+                            preview.classList.remove('disabled');
+                        });
+                });
+            }
+
+            function renderPreview(data) {
+                var pane = document.getElementById('eat-preview-pane');
+                var body = document.getElementById('eat-preview-body');
+                if (!pane || !body) { return; }
+
+                body.innerHTML = '';
+
+                var summary = document.createElement('p');
+                summary.className = 'light';
+                summary.textContent = data.rows.length + ' rows shown, ' + data.skipped + ' skipped.';
+                body.appendChild(summary);
+
+                // Values are written with textContent, never as markup: a product description is
+                // merchant content and must not be able to run in the control panel.
+                data.rows.forEach(function(row, index) {
+                    var heading = document.createElement('h5');
+                    heading.className = 'heading';
+                    heading.textContent = 'Row ' + (index + 1);
+                    body.appendChild(heading);
+
+                    var table = document.createElement('table');
+                    table.className = 'data fullwidth';
+                    var tbody = document.createElement('tbody');
+
+                    data.columns.forEach(function(column) {
+                        var value = row[column];
+                        if (value === undefined || value === null || value === '') { return; }
+
+                        var tr = document.createElement('tr');
+                        var th = document.createElement('th');
+                        th.style.width = '220px';
+                        var code = document.createElement('code');
+                        code.textContent = column;
+                        th.appendChild(code);
+
+                        var td = document.createElement('td');
+                        td.textContent = value;
+
+                        tr.appendChild(th);
+                        tr.appendChild(td);
+                        tbody.appendChild(tr);
+                    });
+
+                    table.appendChild(tbody);
+                    body.appendChild(table);
+                });
+
+                var raw = document.createElement('pre');
+                raw.className = 'code';
+                raw.style.maxHeight = '320px';
+                raw.style.overflow = 'auto';
+                raw.textContent = data.raw;
+                body.appendChild(raw);
+
+                pane.classList.remove('hidden');
+                var tab = document.querySelector('a[href="#attributes-tab"]');
+                if (tab) { tab.click(); }
+                pane.scrollIntoView({ behavior: 'smooth' });
+            }
+
+            var test = document.getElementById('eat-test-merchant');
+            if (test) {
+                test.addEventListener('click', function() {
+                    var merchantId = document.getElementById('merchantId');
+                    var serviceAccount = document.getElementById('serviceAccount');
+
+                    Craft.sendActionRequest('POST', 'eat/feeds/test-merchant', {
+                        data: {
+                            merchantId: merchantId ? merchantId.value : '',
+                            serviceAccount: serviceAccount ? serviceAccount.value : ''
+                        }
+                    })
+                        .then(function(response) { Craft.cp.displayNotice(response.data.message); })
+                        .catch(function(error) {
+                            Craft.cp.displayError((error.response && error.response.data && error.response.data.message) || 'Failed.');
+                        });
+                });
+            }
+        })();
+    {% endjs %}
+{% endif %}

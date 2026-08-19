@@ -1,0 +1,69 @@
+{% extends "_layouts/cp" %}
+
+{% set title = "Run"|t('eat') ~ ' #' ~ run.id %}
+{% set selectedSubnavItem = 'runs' %}
+{% set crumbs = [{ label: "Feed runs"|t('eat'), url: url('eat/runs') }] %}
+
+{% block content %}
+    <div class="pane">
+        <table class="data fullwidth">
+            <tbody>
+                <tr><th style="width: 200px;">{{ "Feed"|t('eat') }}</th><td>{{ feed ? '<a href="' ~ feed.getCpEditUrl() ~ '">' ~ feed.name ~ '</a>'|raw : run.feedId }}</td></tr>
+                <tr><th>{{ "When"|t('eat') }}</th><td>{{ run.dateCreated ? run.dateCreated|datetime('long') : '—' }}</td></tr>
+                <tr><th>{{ "Status"|t('eat') }}</th><td>{{ run.status }}</td></tr>
+                <tr><th>{{ "Trigger"|t('eat') }}</th><td>{{ run.trigger }}</td></tr>
+                <tr><th>{{ "Products written"|t('eat') }}</th><td>{{ run.itemCount }}</td></tr>
+                <tr><th>{{ "Products skipped"|t('eat') }}</th><td>{{ run.skippedCount }}</td></tr>
+                <tr><th>{{ "Size"|t('eat') }}</th><td>{{ run.getSizeLabel() }}</td></tr>
+                <tr><th>{{ "Duration"|t('eat') }}</th><td>{{ run.durationMs }}ms</td></tr>
+                {% if run.url %}
+                    <tr><th>{{ "URL"|t('eat') }}</th><td><code style="word-break: break-all;">{{ run.url }}</code></td></tr>
+                {% endif %}
+                {% if run.message %}
+                    <tr><th>{{ "Message"|t('eat') }}</th><td class="error">{{ run.message }}</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    {% set details = run.getDetails() %}
+
+    {% if details.skippedReasons is defined and details.skippedReasons|length %}
+        <h2>{{ "Why products were skipped"|t('eat') }}</h2>
+        <div class="pane">
+            <table class="data fullwidth">
+                <tbody>
+                    {% for reason, count in details.skippedReasons %}
+                        <tr><th style="width: 320px;"><code>{{ reason }}</code></th><td>{{ count }}</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    {% if details.delivery is defined and details.delivery|length %}
+        <h2>{{ "Delivery"|t('eat') }}</h2>
+        <div class="pane">
+            <table class="data fullwidth">
+                <thead><tr><th>{{ "Destination"|t('eat') }}</th><th>{{ "Result"|t('eat') }}</th><th>{{ "Detail"|t('eat') }}</th></tr></thead>
+                <tbody>
+                    {% for result in details.delivery %}
+                        <tr>
+                            <td><code>{{ result.mode ?? '?' }}</code></td>
+                            <td>{{ result.ok ?? false ? "OK"|t('eat') : "Failed"|t('eat') }}</td>
+                            <td class="light">{{ result.message ?? result.path ?? result.url ?? '' }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+
+    {% if details.exception is defined %}
+        <h2>{{ "Error"|t('eat') }}</h2>
+        <div class="pane">
+            <code>{{ details.exception }}</code>
+            <p class="light">{{ details.file ?? '' }}:{{ details.line ?? '' }}</p>
+        </div>
+    {% endif %}
+{% endblock %}
