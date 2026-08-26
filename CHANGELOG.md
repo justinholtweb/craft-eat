@@ -25,3 +25,8 @@ Initial release.
 - Console commands for listing, generating, previewing, exporting and importing feeds, and for
   reading and pruning the run log.
 - `craft.eat.*` Twig API.
+
+### Fixed
+
+- The Feeds screen rendered an empty table. It builds its index with `Craft.VueAdminTable` without registering Craft's `AdminTableAsset` bundle, so the constructor was undefined, the JavaScript threw, and the table area was left blank with no rows and no empty-state message.
+

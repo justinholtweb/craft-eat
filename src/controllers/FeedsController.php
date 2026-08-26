@@ -9,6 +9,7 @@ use craft\helpers\StringHelper;
 use craft\helpers\UrlHelper;
 use craft\web\Controller;
 use craft\web\View;
+use craft\web\assets\admintable\AdminTableAsset;
 use justinholtweb\eat\channels\Registry;
 use justinholtweb\eat\helpers\Attributes;
 use justinholtweb\eat\helpers\Modifiers;
@@ -67,6 +68,7 @@ class FeedsController extends Controller
             ];
         }
 
+        $this->getView()->registerAssetBundle(AdminTableAsset::class);
         $this->getView()->registerJs($this->_indexJs($tableData), View::POS_END);
 
         return $this->renderTemplate('eat/feeds/_index', [
