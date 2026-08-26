@@ -9,7 +9,6 @@ use craft\helpers\ArrayHelper;
 use craft\helpers\Json;
 use craft\helpers\StringHelper;
 use craft\helpers\UrlHelper;
-use craft\validators\HandleValidator;
 use craft\validators\UniqueValidator;
 use DateTime;
 use justinholtweb\eat\channels\Registry;
@@ -147,7 +146,7 @@ class Feed extends Model
     {
         return [
             [['name', 'handle', 'channel', 'format'], 'required'],
-            [['handle'], HandleValidator::class],
+            [['handle'], 'validateHandle'],
             [['handle'], UniqueValidator::class, 'targetClass' => FeedRecord::class, 'targetAttribute' => 'handle'],
             [['interval'], 'integer', 'min' => 0],
             [['variantMode'], 'in', 'range' => array_keys(self::variantModes())],
@@ -155,6 +154,17 @@ class Feed extends Model
             [['channel'], 'validateChannel'],
             [['format'], 'validateFormat'],
         ];
+    }
+
+    /**
+     * A feed handle is not a Craft handle: it is a file name and a URL segment, so `google-shopping`
+     * has to be allowed — Craft's own HandleValidator would insist on `googleShopping.xml`.
+     */
+    public function validateHandle(): void
+    {
+        if (!preg_match('/^[a-z0-9]+(?:[-_][a-z0-9]+)*$/', (string)$this->handle)) {
+            $this->addError('handle', Craft::t('eat', 'Handles can contain lowercase letters, numbers, hyphens and underscores.'));
+        }
     }
 
     public function validateChannel(): void

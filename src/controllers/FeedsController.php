@@ -234,7 +234,7 @@ class FeedsController extends Controller
 
         $previousChannel = $feed->channel;
         $feed->name = $this->request->getBodyParam('name');
-        $feed->handle = $this->request->getBodyParam('handle') ?: StringHelper::toHandle((string)$feed->name);
+        $feed->handle = $this->request->getBodyParam('handle') ?: StringHelper::toKebabCase((string)$feed->name);
         $feed->channel = $this->request->getBodyParam('channel', $feed->channel);
         $feed->format = $this->request->getBodyParam('format', $feed->format);
         $feed->enabled = (bool)$this->request->getBodyParam('enabled', true);
