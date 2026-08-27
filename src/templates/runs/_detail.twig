@@ -8,7 +8,18 @@
     <div class="pane">
         <table class="data fullwidth">
             <tbody>
-                <tr><th style="width: 200px;">{{ "Feed"|t('eat') }}</th><td>{{ feed ? '<a href="' ~ feed.getCpEditUrl() ~ '">' ~ feed.name ~ '</a>'|raw : run.feedId }}</td></tr>
+                {# `|raw` binds to the string it is attached to, not to the concatenation, so
+                   building the anchor by hand here prints the markup as text. #}
+                <tr>
+                    <th style="width: 200px;">{{ "Feed"|t('eat') }}</th>
+                    <td>
+                        {% if feed %}
+                            <a href="{{ feed.getCpEditUrl() }}">{{ feed.name }}</a>
+                        {% else %}
+                            {{ run.feedId }}
+                        {% endif %}
+                    </td>
+                </tr>
                 <tr><th>{{ "When"|t('eat') }}</th><td>{{ run.dateCreated ? run.dateCreated|datetime('long') : '—' }}</td></tr>
                 <tr><th>{{ "Status"|t('eat') }}</th><td>{{ run.status }}</td></tr>
                 <tr><th>{{ "Trigger"|t('eat') }}</th><td>{{ run.trigger }}</td></tr>

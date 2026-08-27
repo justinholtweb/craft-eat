@@ -68,6 +68,7 @@ $originalEdition = $plugin->edition;
 $createdProducts = [];
 $createdFeeds = [];
 $createdFiles = [];
+$taxonomyKeys = [];
 
 function switchEdition(string $edition): void
 {
@@ -1013,6 +1014,9 @@ try {
 
     $productTypeHandle = Commerce::getInstance()->getProductTypes()->getAllProductTypes()[0]->handle;
 
+    // Remember what was there so the harness's own mappings survive the run.
+    $taxonomyKeys[] = ['google', 'productType', $productTypeHandle, $plugin->getTaxonomy()->lookup('google', 'productType', $productTypeHandle)];
+
     check('a mapping saves and reads back', function() use ($plugin, $productTypeHandle) {
         $plugin->getTaxonomy()->save('google', 'productType', $productTypeHandle, 'Apparel & Accessories > Clothing');
 
@@ -1020,8 +1024,18 @@ try {
             ?: 'lookup failed';
     });
 
-    check('the map is per channel', function() use ($plugin, $productTypeHandle) {
-        return $plugin->getTaxonomy()->lookup('meta', 'productType', $productTypeHandle) === null ?: 'channels share a map';
+    check('the map is per channel', function() use ($plugin) {
+        // A key this run owns: the harness carries real taxonomy mappings for the demo feeds, and
+        // a check that assumes an empty table is a check that fails for the wrong reason.
+        $key = 'eatcheck-' . bin2hex(random_bytes(3));
+        $plugin->getTaxonomy()->save('google', 'productType', $key, 'Test > Category');
+
+        $isolated = $plugin->getTaxonomy()->lookup('meta', 'productType', $key) === null
+            && $plugin->getTaxonomy()->lookup('google', 'productType', $key) === 'Test > Category';
+
+        $plugin->getTaxonomy()->save('google', 'productType', $key, '');
+
+        return $isolated ?: 'channels share a map';
     });
 
     check('a taxonomy source fills the attribute', function() use ($plugin, $csvFeed) {
@@ -1407,9 +1421,10 @@ try {
         @unlink($leftover);
     }
 
-    Craft::$app->getDb()->createCommand()
-        ->delete(justinholtweb\eat\db\Table::TAXONOMY, ['channel' => ['google', 'meta']])
-        ->execute();
+    // Only the mappings this run made: the harness holds real ones for its demo feeds.
+    foreach ($taxonomyKeys as [$channel, $sourceType, $sourceKey, $original]) {
+        Plugin::getInstance()->getTaxonomy()->save($channel, $sourceType, $sourceKey, $original);
+    }
 
     echo "  cleaned\n";
 }

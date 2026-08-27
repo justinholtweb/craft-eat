@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<!-- handmade: hand-tuned deck -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Eat — Plugin Store promos</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --charcoal: #0f0f1a;
+    --charcoal-light: #1a1a2e;
+    --charcoal-lighter: #252540;
+    --accent: #d9542b;
+    --accent-light: #f0794a;
+    --gold: #e8b04b;
+    --off-white: #f0f0f5;
+  }
+
+  html { background: #000; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: var(--off-white);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---- slide shell ---------------------------------------------------- */
+  .slide {
+    position: relative;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse at 85% 15%, rgba(217, 84, 43, 0.24) 0%, transparent 42%),
+      radial-gradient(ellipse at 65% 5%,  rgba(240, 121, 74, 0.14) 0%, transparent 35%),
+      radial-gradient(ellipse at 15% 85%, rgba(232, 176, 75, 0.08) 0%, transparent 40%),
+      radial-gradient(ellipse at 35% 95%, rgba(217, 84, 43, 0.09) 0%, transparent 35%),
+      linear-gradient(135deg, #0f0f1a 0%, #1c1214 30%, #201513 60%, #0f0f1a 100%);
+  }
+
+  /* Oversized watermark, echoing the app icon */
+  .slide::after {
+    content: '';
+    position: absolute;
+    top: -18%;
+    left: -12%;
+    width: 1180px;
+    height: 1180px;
+    background: url('assets/watermark.svg') no-repeat center / contain;
+    opacity: 0.05;
+    pointer-events: none;
+  }
+
+  /* Hairline along the top edge */
+  .slide::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 6px;
+    background: linear-gradient(90deg, var(--accent), var(--accent-light), var(--gold), var(--accent));
+    z-index: 5;
+  }
+
+  .inner {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    padding: 118px 130px;
+    display: flex;
+    align-items: center;
+  }
+
+  /* ---- type ------------------------------------------------------------ */
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    font-size: 20px;
+    font-weight: 500;
+    letter-spacing: 0.32em;
+    text-transform: uppercase;
+    color: rgba(240, 240, 245, 0.62);
+    margin-bottom: 34px;
+  }
+  .eyebrow .rule {
+    width: 58px;
+    height: 3px;
+    border-radius: 2px;
+    background: var(--accent-light);
+  }
+
+  h1, h2 {
+    font-family: 'Jersey 20', sans-serif;
+    font-weight: 400;
+    line-height: 0.9;
+    letter-spacing: 0.005em;
+  }
+
+  .gradient-text {
+    background: linear-gradient(100deg, #d9542b 0%, #f0794a 36%, #e8b04b 68%, #d9542b 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .lede {
+    font-size: 34px;
+    line-height: 1.5;
+    color: rgba(240, 240, 245, 0.72);
+  }
+
+  .mono {
+    font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  }
+
+  /* ---- cover slide ----------------------------------------------------- */
+  .cover .inner { gap: 90px; }
+  .cover .copy { flex: 1 1 auto; }
+  .cover h1 { font-size: 260px; margin-bottom: 20px; }
+  .cover .tagline {
+    font-family: 'Jersey 20', sans-serif;
+    font-size: 60px;
+    line-height: 1.02;
+    color: var(--off-white);
+    margin-bottom: 40px;
+    max-width: 15ch;
+  }
+  .cover .lede { max-width: 27ch; font-size: 30px; }
+
+  .cover .mark {
+    flex: 0 0 auto;
+    width: 460px;
+    height: 460px;
+    filter: drop-shadow(14px 14px 0 rgba(0, 0, 0, 0.35));
+  }
+  .cover .mark img { width: 100%; height: 100%; display: block; }
+
+  .badges { display: flex; gap: 16px; margin-top: 52px; }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 26px;
+    font-size: 22px;
+    font-weight: 500;
+    color: rgba(240, 240, 245, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 999px;
+  }
+  .badge .dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--accent-light);
+  }
+
+  /* ---- the before/after statement -------------------------------------- */
+  .statement .inner { flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+  .statement .eyebrow { justify-content: center; }
+  .swap { display: flex; flex-direction: column; align-items: center; gap: 22px; margin-top: 8px; }
+  .swap .caption {
+    font-size: 26px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(240, 240, 245, 0.42);
+  }
+  .swap .before {
+    font-size: 92px;
+    color: rgba(240, 240, 245, 0.34);
+    letter-spacing: 0.02em;
+  }
+  .swap .arrow {
+    width: 4px;
+    height: 62px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, rgba(240,121,74,0.15), var(--accent-light));
+    position: relative;
+  }
+  .swap .arrow::after {
+    content: '';
+    position: absolute;
+    left: 50%; bottom: -4px;
+    width: 18px; height: 18px;
+    transform: translateX(-50%) rotate(45deg);
+    border-right: 4px solid var(--accent-light);
+    border-bottom: 4px solid var(--accent-light);
+    border-radius: 2px;
+  }
+  .swap .after {
+    font-size: 150px;
+    line-height: 1;
+    letter-spacing: 0.01em;
+  }
+  .statement .lede { margin-top: 40px; max-width: 34ch; font-size: 32px; }
+
+  /* ---- feature slides -------------------------------------------------- */
+  .feature .inner { align-items: center; }
+  .feature .copy { width: 780px; flex: 0 0 780px; }
+  .feature h2 { font-size: 108px; margin-bottom: 30px; }
+  .feature .lede { max-width: 21ch; }
+
+  .points {
+    list-style: none;
+    margin-top: 44px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .points li {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    font-size: 25px;
+    line-height: 1.4;
+    color: rgba(240, 240, 245, 0.6);
+  }
+  .points li .tick {
+    flex: 0 0 auto;
+    margin-top: 9px;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--accent-light);
+  }
+
+  /* Right-hand panel shared by the token, bucket, flow and table slides */
+  .panel {
+    position: absolute;
+    top: 50%;
+    left: 900px;
+    right: 130px;
+    transform: translateY(-50%);
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  /* ---- format tokens --------------------------------------------------- */
+  .token-row {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    padding: 34px 38px;
+    border-radius: 16px;
+    background: rgba(37, 37, 64, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .token-row .fmt { font-size: 32px; color: rgba(240, 240, 245, 0.55); flex: 1 1 auto; }
+  .token-row .to { color: var(--accent-light); font-size: 30px; flex: 0 0 auto; }
+  .token-row .val { font-size: 34px; color: var(--off-white); flex: 0 0 auto; }
+
+  /* ---- reset buckets --------------------------------------------------- */
+  .buckets { display: flex; gap: 22px; }
+  .bucket {
+    flex: 1 1 0;
+    padding: 38px 30px;
+    border-radius: 18px;
+    background: rgba(37, 37, 64, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    text-align: center;
+  }
+  .bucket .period {
+    font-size: 26px;
+    letter-spacing: 0.1em;
+    color: rgba(240, 240, 245, 0.5);
+    margin-bottom: 20px;
+  }
+  .bucket .count {
+    font-family: 'Jersey 20', sans-serif;
+    font-size: 92px;
+    line-height: 1;
+    color: var(--accent-light);
+  }
+  .bucket .label { font-size: 21px; color: rgba(240, 240, 245, 0.4); margin-top: 16px; }
+  .bucket.fresh .count { color: var(--gold); }
+
+  .note {
+    font-size: 24px;
+    line-height: 1.5;
+    color: rgba(240, 240, 245, 0.45);
+    text-align: center;
+    margin-top: 8px;
+  }
+
+  /* ---- allocation flow -------------------------------------------------- */
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 26px;
+    padding: 28px 34px;
+    border-radius: 16px;
+    background: rgba(37, 37, 64, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .step .num {
+    flex: 0 0 auto;
+    width: 58px; height: 58px;
+    display: grid; place-items: center;
+    border-radius: 12px;
+    background: var(--accent);
+    font-family: 'Jersey 20', sans-serif;
+    font-size: 38px;
+    color: #fff;
+  }
+  .step .label { display: block; font-size: 29px; font-weight: 600; color: var(--off-white); }
+  .step .sub { display: block; font-size: 21px; color: rgba(240, 240, 245, 0.55); margin-top: 6px; }
+
+  .lock {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    font-size: 23px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(240, 240, 245, 0.42);
+  }
+  .lock .bar { flex: 1 1 auto; height: 1px; background: rgba(255,255,255,0.1); }
+
+  /* ---- backfill table --------------------------------------------------- */
+  .sheet {
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
+  }
+  .sheet .head {
+    display: flex;
+    padding: 26px 38px;
+    background: rgba(217, 84, 43, 0.18);
+    font-size: 22px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(240, 240, 245, 0.6);
+  }
+  .sheet .row {
+    display: flex;
+    padding: 26px 38px;
+    background: rgba(37, 37, 64, 0.55);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 31px;
+  }
+  .sheet .c1 { flex: 0 0 300px; color: rgba(240, 240, 245, 0.4); }
+  .sheet .c2 { flex: 0 0 70px; color: var(--accent-light); }
+  .sheet .c3 { flex: 1 1 auto; color: var(--off-white); }
+
+  /* ---- terminal --------------------------------------------------------- */
+  .term {
+    position: absolute;
+    top: 50%;
+    left: 900px;
+    right: -110px;
+    transform: translateY(-50%);
+    border-radius: 14px; overflow: hidden; box-shadow: 0 30px 90px rgba(0, 0, 0, 0.55); border: 1px solid rgba(255, 255, 255, 0.08); }
+  .term .chrome {
+    height: 44px;
+    background: #2a2a3e;
+    background-image:
+      radial-gradient(circle at 26px 22px, #ff5f57 6.5px, transparent 7px),
+      radial-gradient(circle at 52px 22px, #ffbd2e 6.5px, transparent 7px),
+      radial-gradient(circle at 78px 22px, #28ca42 6.5px, transparent 7px);
+  }
+  .term .body {
+    background: #12121f;
+    padding: 42px 44px;
+    font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    font-size: 25px;
+    line-height: 2.0;
+  }
+  .term .prompt { color: var(--accent-light); }
+  .term .cmd { color: var(--off-white); }
+  .term .out { color: rgba(240, 240, 245, 0.45); }
+  .term .ok { color: #4ade80; }
+  .term .warn { color: var(--gold); }
+  .term .blank { display: block; height: 20px; }
+
+  /* ---- footer lockup --------------------------------------------------- */
+  .footer {
+    position: absolute;
+    left: 130px;
+    bottom: 62px;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    font-size: 22px;
+    letter-spacing: 0.06em;
+    color: rgba(240, 240, 245, 0.4);
+  }
+  .footer img { width: 40px; height: 40px; border-radius: 9px; }
+  .footer b { color: rgba(240, 240, 245, 0.72); font-weight: 600; }
+
+  /* ---- channel grid ----------------------------------------------------- */
+  .chips { display: flex; flex-wrap: wrap; gap: 16px; }
+  .chip {
+    padding: 20px 26px;
+    border-radius: 14px;
+    font-size: 27px;
+    color: rgba(240, 240, 245, 0.82);
+    background: rgba(37, 37, 64, 0.62);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .chip.lead {
+    color: #fff;
+    background: rgba(217, 84, 43, 0.22);
+    border-color: rgba(240, 121, 74, 0.45);
+  }
+  .chip.custom {
+    color: var(--gold);
+    border-style: dashed;
+    border-color: rgba(232, 176, 75, 0.45);
+    background: transparent;
+  }
+
+  /* ---- vocabulary table -------------------------------------------------- */
+  .vocab { border-radius: 18px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); }
+  .vocab .vrow {
+    display: flex;
+    align-items: center;
+    padding: 25px 36px;
+    background: rgba(37, 37, 64, 0.55);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 30px;
+  }
+  .vocab .vrow:first-child { border-top: 0; }
+  .vocab .who { flex: 0 0 340px; color: rgba(240, 240, 245, 0.5); font-size: 27px; }
+  .vocab .word { flex: 1 1 auto; color: var(--off-white); }
+  .vocab .vrow.hi .word { color: var(--accent-light); }
+
+  /* Only render the requested slide when screenshotting */
+  body.single .slide { display: none; }
+  body.single .slide.active { display: block; }
+
+  /* ---- control-panel screenshot cards -------------------------------
+     Self-contained: these cards must drop into any deck in the family, and the decks
+     do not share a class system. Only --accent and --off-white are relied on, both of
+     which every deck defines, and both have fallbacks. */
+  .slide.cpcard { display: block; }
+  .cpcard .cpc-inner {
+    position: relative;
+    z-index: 2;
+    height: 100%;
+    padding: 112px 120px;
+    display: flex;
+    align-items: center;
+    gap: 70px;
+  }
+  .cpcard .cpc-copy { width: 660px; flex: 0 0 660px; }
+
+  .cpcard .cpc-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 34px;
+    font-size: 21px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent, #7aa2c8);
+  }
+  .cpcard .cpc-eyebrow i {
+    display: block;
+    width: 62px;
+    height: 3px;
+    background: var(--accent, #7aa2c8);
+    border-radius: 2px;
+  }
+
+  .cpcard .cpc-h2 {
+    font-family: 'Jersey 20', 'Inter', sans-serif;
+    font-size: 88px;
+    line-height: 0.96;
+    font-weight: 400;
+    letter-spacing: 0.005em;
+    margin: 0 0 28px;
+    color: var(--off-white, #f0f0f5);
+  }
+
+  .cpcard .cpc-lede {
+    font-size: 33px;
+    line-height: 1.42;
+    color: rgba(240, 240, 245, 0.66);
+    margin: 0;
+  }
+
+  .cpcard .cpc-points { list-style: none; margin: 40px 0 0; padding: 0; }
+  .cpcard .cpc-points li {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    font-size: 26px;
+    line-height: 1.5;
+    color: rgba(240, 240, 245, 0.72);
+    margin-bottom: 18px;
+  }
+  .cpcard .cpc-points li::before {
+    content: '';
+    flex: 0 0 auto;
+    width: 10px;
+    height: 10px;
+    margin-top: 14px;
+    border-radius: 50%;
+    background: var(--accent, #7aa2c8);
+  }
+
+  .cpcard .cpc-panel { flex: 1 1 auto; min-width: 0; }
+
+  .cpcard .cpc-frame {
+    border-radius: 14px;
+    overflow: hidden;
+    background: #e4edf6;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    box-shadow: 0 40px 90px rgba(0, 0, 0, 0.55), 0 6px 18px rgba(0, 0, 0, 0.35);
+  }
+  .cpcard .cpc-chrome {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 13px 18px;
+    background: linear-gradient(180deg, #2a2a3d 0%, #21212f 100%);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.35);
+  }
+  .cpcard .cpc-chrome b { width: 12px; height: 12px; border-radius: 50%; background: rgba(255,255,255,0.16); }
+  .cpcard .cpc-chrome b:nth-child(1) { background: #ff5f57; }
+  .cpcard .cpc-chrome b:nth-child(2) { background: #febc2e; }
+  .cpcard .cpc-chrome b:nth-child(3) { background: #28c840; }
+  .cpcard .cpc-chrome em {
+    margin-left: 12px;
+    font-style: normal;
+    font-size: 19px;
+    letter-spacing: 0.02em;
+    color: rgba(240, 240, 245, 0.45);
+  }
+  .cpcard .cpc-frame img { display: block; width: 100%; height: auto; }
+
+  /* A tall capture is anchored to its top — the interesting rows are always first.
+     The fade makes the cut read as "there is more" rather than as a broken edge. */
+  .cpcard .cpc-frame.cpc-clip { max-height: 620px; position: relative; }
+  .cpcard .cpc-frame.cpc-clip img { object-fit: cover; object-position: top center; max-height: 580px; }
+  .cpcard .cpc-frame.cpc-clip::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 130px;
+    background: linear-gradient(180deg, rgba(228,237,246,0) 0%, rgba(228,237,246,0.92) 78%, #e4edf6 100%);
+  }
+
+  .cpcard .cpc-caption {
+    display: block;
+    margin-top: 20px;
+    font-size: 22px;
+    line-height: 1.45;
+    color: rgba(240, 240, 245, 0.52);
+  }
+  .cpcard .cpc-caption b { color: rgba(240, 240, 245, 0.80); font-weight: 600; }
+
+</style>
+</head>
+<body>
+
+<!-- 1 · Cover ============================================================ -->
+<section class="slide cover" data-n="1">
+  <div class="inner">
+    <div class="copy">
+      <div class="eyebrow"><span class="rule"></span> Craft Commerce 5</div>
+      <h1 class="gradient-text">Eat</h1>
+      <p class="tagline">Product feeds for every channel that wants one.</p>
+      <p class="lede">Google, Meta, Pinterest, Microsoft, TikTok and ten more — mapped, scheduled and delivered.</p>
+      <div class="badges">
+        <span class="badge"><span class="dot"></span> Lite free &nbsp;·&nbsp; Pro $79</span>
+        <span class="badge">Craft 5.3+ · Commerce 5 · PHP 8.2+</span>
+      </div>
+    </div>
+    <div class="mark"><img src="assets/icon.svg" alt=""></div>
+  </div>
+</section>
+
+<!-- 2 · The swap ========================================================= -->
+<section class="slide statement" data-n="2">
+  <div class="inner">
+    <div class="eyebrow"><span class="rule"></span> The whole idea</div>
+    <div class="swap">
+      <span class="caption">What a feed usually is</span>
+      <span class="before mono">templates/feeds/google.twig</span>
+      <span class="arrow"></span>
+      <span class="caption">What it becomes</span>
+      <span class="after mono gradient-text">/feeds/google.xml</span>
+    </div>
+    <p class="lede">One attribute map per channel, generated on a schedule and written to a URL you paste into
+      Merchant Center — instead of a template you maintain by hand for every channel you add.</p>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Eat</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-eat</div>
+</section>
+
+<!-- 3 · Channels ========================================================= -->
+<section class="slide feature" data-n="3">
+  <div class="inner">
+    <div class="copy">
+      <div class="eyebrow"><span class="rule"></span> Channels</div>
+      <h2>Fifteen<br>templates</h2>
+      <p class="lede">Each one arrives with that merchant&rsquo;s attribute names, required set and file shape
+        already mapped to your Commerce data.</p>
+      <ul class="points">
+        <li><span class="tick"></span> RSS 2.0, XML, CSV, TSV, TXT, JSON &mdash; gzipped if you like</li>
+        <li><span class="tick"></span> A custom builder for the channel nobody has heard of</li>
+      </ul>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="chips">
+      <span class="chip lead">Google Shopping</span>
+      <span class="chip lead">Meta</span>
+      <span class="chip lead">Pinterest</span>
+      <span class="chip lead">Microsoft</span>
+      <span class="chip lead">TikTok</span>
+      <span class="chip">Snapchat</span>
+      <span class="chip">Google Local</span>
+      <span class="chip">Criteo</span>
+      <span class="chip">Awin</span>
+      <span class="chip">idealo</span>
+      <span class="chip">Kelkoo</span>
+      <span class="chip">PriceRunner</span>
+      <span class="chip">Shopzilla</span>
+      <span class="chip">Rakuten</span>
+      <span class="chip custom">+ Custom</span>
+    </div>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Eat</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-eat</div>
+</section>
+
+<!-- 4 · The attribute map ================================================ -->
+<section class="slide feature" data-n="4">
+  <div class="inner">
+    <div class="copy">
+      <div class="eyebrow"><span class="rule"></span> The map</div>
+      <h2>One row per<br>attribute</h2>
+      <p class="lede">Point each of the channel&rsquo;s attributes at a product attribute, a custom field, a static
+        value, the taxonomy map, or Twig.</p>
+      <ul class="points">
+        <li><span class="tick"></span> Fourteen chainable modifiers on any row</li>
+        <li><span class="tick"></span> Variant fields win over product fields</li>
+      </ul>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="token-row mono"><span class="fmt">g:id</span><span class="to">&larr;</span><span class="val">sku</span></div>
+    <div class="token-row mono"><span class="fmt">g:price</span><span class="to">&larr;</span><span class="val">priceWithCurrency</span></div>
+    <div class="token-row mono"><span class="fmt">g:image_link</span><span class="to">&larr;</span><span class="val">gallery.0.url</span></div>
+    <div class="token-row mono"><span class="fmt">g:google_product_category</span><span class="to">&larr;</span><span class="val">taxonomy map</span></div>
+    <div class="token-row mono"><span class="fmt">description</span><span class="to">&larr;</span><span class="val">strip_tags | truncate:150</span></div>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Eat</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-eat</div>
+</section>
+
+<!-- 5 · Vocabulary ======================================================= -->
+<section class="slide feature" data-n="5">
+  <div class="inner">
+    <div class="copy">
+      <div class="eyebrow"><span class="rule"></span> Their words</div>
+      <h2>Every channel&rsquo;s<br>own words</h2>
+      <p class="lede">The same mapping writes each channel&rsquo;s own vocabulary — the detail a hand-written
+        template gets wrong on channel number two.</p>
+      <ul class="points">
+        <li><span class="tick"></span> And RSS&rsquo;s own <span class="mono">title</span> is never written as <span class="mono">g:title</span></li>
+      </ul>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="vocab mono">
+      <div class="vrow hi"><span class="who">Google</span><span class="word">in_stock</span></div>
+      <div class="vrow"><span class="who">Meta &amp; Pinterest</span><span class="word">in stock</span></div>
+      <div class="vrow"><span class="who">Criteo</span><span class="word">true</span></div>
+      <div class="vrow"><span class="who">Awin</span><span class="word">1</span></div>
+      <div class="vrow"><span class="who">PriceRunner</span><span class="word">In Stock</span></div>
+      <div class="vrow"><span class="who">idealo</span><span class="word">auf Lager</span></div>
+    </div>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Eat</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-eat</div>
+</section>
+
+<!-- 6 · Delivery ========================================================= -->
+<section class="slide feature" data-n="6">
+  <div class="inner">
+    <div class="copy">
+      <div class="eyebrow"><span class="rule"></span> Delivery</div>
+      <h2>Written, then<br>taken there</h2>
+      <p class="lede">Every run writes the local file first, so a dead FTP server can never take the public feed
+        URL down with it.</p>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="step"><span class="num">1</span><span><b class="label">A file, and a URL that stays put</b><span class="sub">Staged and renamed into place, so a fetch mid-run gets yesterday&rsquo;s feed, never half of today&rsquo;s</span></span></div>
+    <div class="step"><span class="num">2</span><span><b class="label">An asset volume</b><span class="sub">S3, Spaces, anything with a filesystem</span></span></div>
+    <div class="step"><span class="num">3</span><span><b class="label">FTP or SFTP</b><span class="sub">Uploaded on every run, credentials from environment variables</span></span></div>
+    <div class="step"><span class="num">4</span><span><b class="label">Google Merchant Center</b><span class="sub">Content API v2.1, in batches of 100 — no Google SDK</span></span></div>
+    <p class="note">Or serve it live at <span class="mono">/eat/feed/&lt;handle&gt;</span>, cached for the schedule interval.</p>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Eat</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-eat</div>
+</section>
+
+<!-- 7 · Console ========================================================== -->
+<section class="slide feature" data-n="7">
+  <div class="inner">
+    <div class="copy">
+      <div class="eyebrow"><span class="rule"></span> Schedule &amp; console</div>
+      <h2>One cron line,<br>every feed</h2>
+      <p class="lede">Feeds regenerate on their own interval, in the queue — and on a product save, debounced, if
+        you want the channel to know sooner.</p>
+    </div>
+  </div>
+  <div class="term">
+    <div class="chrome"></div>
+    <div class="body">
+      <div><span class="prompt">$</span> <span class="cmd">php craft eat/feeds/generate --due</span></div>
+      <div class="out">google-shopping &nbsp;&nbsp;<span class="ok">1,284 products</span>, 12 skipped, 2.1 MB, 4.3s</div>
+      <div class="out">meta-catalog &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="ok">1,284 products</span>, 12 skipped, 1.4 MB, 3.9s</div>
+      <div class="out">tiktok-catalog &nbsp;&nbsp;&nbsp;<span class="ok">1,272 products</span>, 24 skipped, 402 KB, 3.7s</div>
+      <span class="blank"></span>
+      <div><span class="prompt">$</span> <span class="cmd">php craft eat/feeds/preview google-shopping</span></div>
+      <div class="out">5 rows, 12 skipped &nbsp;&nbsp;<span class="warn">missing:image_link: 12</span></div>
+      <span class="blank"></span>
+      <div><span class="prompt">$</span> <span class="cmd">php craft eat/feeds/export --file=feeds.json</span></div>
+      <div class="out">4 feeds written to feeds.json</div>
+    </div>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Eat</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-eat</div>
+</section>
+
+<!-- 8 · control-panel screenshot ========================================= -->
+<section class="slide cpcard" data-n="8">
+  <div class="cpc-inner">
+    <div class="cpc-copy">
+      <div class="cpc-eyebrow"><i></i> In the control panel</div>
+      <h2 class="cpc-h2">Every feed,<br>and its URL</h2>
+      <p class="cpc-lede">What each channel gets, when it was last built, and the address to paste into it.</p>
+    </div>
+    <div class="cpc-panel">
+      <figure class="cpc-frame">
+        <div class="cpc-chrome"><b></b><b></b><b></b><em>Eat &mdash; Product feeds</em></div>
+        <img src="shots/eat-feeds.png" alt="">
+      </figure>
+      <span class="cpc-caption">The Eat feeds index in the Craft control panel, listing four feeds with their channel, format, schedule, product count and public URL</span>
+    </div>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Eat</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-eat</div>
+</section>
+
+<!-- 9 · control-panel screenshot ========================================= -->
+<section class="slide cpcard" data-n="9">
+  <div class="cpc-inner">
+    <div class="cpc-copy">
+      <div class="cpc-eyebrow"><i></i> In the control panel</div>
+      <h2 class="cpc-h2">The map,<br>in one table</h2>
+      <p class="cpc-lede">Attribute, source, value, modifiers. Drag to reorder — that order is the CSV&rsquo;s columns.</p>
+    </div>
+    <div class="cpc-panel">
+      <figure class="cpc-frame cpc-clip">
+        <div class="cpc-chrome"><b></b><b></b><b></b><em>Google Shopping &mdash; Attributes</em></div>
+        <img src="shots/eat-attributes.png" alt="">
+      </figure>
+      <span class="cpc-caption">The attribute map for a Google Shopping feed, mapping each Google attribute to a product attribute, a Twig template, the taxonomy map or a static value</span>
+    </div>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Eat</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-eat</div>
+</section>
+
+<!-- 10 · control-panel screenshot ======================================== -->
+<section class="slide cpcard" data-n="10">
+  <div class="cpc-inner">
+    <div class="cpc-copy">
+      <div class="cpc-eyebrow"><i></i> In the control panel</div>
+      <h2 class="cpc-h2">Why 39 products<br>aren&rsquo;t in the feed</h2>
+      <p class="cpc-lede">Every run records what was written, what was skipped and why, and what happened at each
+        destination.</p>
+    </div>
+    <div class="cpc-panel">
+      <figure class="cpc-frame cpc-clip">
+        <div class="cpc-chrome"><b></b><b></b><b></b><em>Eat &mdash; Run detail</em></div>
+        <img src="shots/eat-run.png" alt="">
+      </figure>
+      <span class="cpc-caption">An Eat run detail screen showing products written and skipped, the skip reasons broken down by cause, and the delivery result</span>
+    </div>
+  </div>
+  <div class="footer"><img src="assets/icon.svg" alt=""> <b>Eat</b> &nbsp;·&nbsp; justinholt.com/plugins/craft-eat</div>
+</section>
+
+<script>
+  var n = new URLSearchParams(location.search).get('s');
+  if (n) {
+    document.body.classList.add('single');
+    var el = document.querySelector('.slide[data-n="' + n + '"]');
+    if (el) el.classList.add('active');
+  }
+</script>
+</body>
+</html>

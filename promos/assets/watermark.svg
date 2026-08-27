@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+    <!-- The app icon with its tile stripped, and with every straight edge removed: at watermark
+         scale a rim line or a base bar reads as a hard-edged band laid across the artwork. Only
+         the curves survive, and the bowl runs past the viewBox so nothing closes it into a shape. -->
+    <g fill="none" stroke="#ffffff" stroke-width="4" stroke-linecap="round">
+        <path d="M31 40a13 13 0 0 1 13 13"/>
+        <path d="M31 27a26 26 0 0 1 26 26"/>
+        <path d="M-6 58a56 56 0 0 0 112 0"/>
+    </g>
+    <circle cx="31" cy="52" r="4" fill="#ffffff"/>
+</svg>
