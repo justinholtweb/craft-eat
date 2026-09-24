@@ -179,4 +179,4 @@ ddev exec bash -c 'cd /var/www/html && bash /var/www/craft-eat/tests/smoke.sh'
 
 ## License
 
-Proprietary. © Justin Holt.
+Proprietary — the Craft License. See `LICENSE.md`.
