@@ -11,7 +11,7 @@ plugin's marketing page at
 ./build.sh "2 5"    # just slides 2 and 5
 ```
 
-Output lands in `out/` as `eat-promo-N.png`, 1920×1080 (rendered at 2× in headless Chrome, then
+Output lands in `out/` as `eat-promo-N.jpg`, 1920×1080 (rendered at 2× in headless Chrome, then
 downsampled so the type stays crisp).
 
 ## Slides

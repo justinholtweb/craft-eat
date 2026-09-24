@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Renders the Plugin Store promo images from slides.html.
-# Output: promos/out/eat-promo-N.png at 1920x1080 (rendered at 2x, downsampled).
+# Output: promos/out/eat-promo-N.jpg at 1920x1080 (rendered at 2x, downsampled, JPEG q90).
 set -euo pipefail
 
 cd "$(dirname "$0")"
@@ -25,6 +25,8 @@ for n in $SLIDES; do
     --virtual-time-budget=5000 \
     --screenshot="out/eat-promo-$n.png" \
     "file://$PWD/slides.html?s=$n" >/dev/null 2>&1
-  sips --resampleWidth 1920 "out/eat-promo-$n.png" >/dev/null
-  echo "  built out/eat-promo-$n.png"
+  sips --resampleWidth 1920 -s format jpeg -s formatOptions 90 \
+    "out/eat-promo-$n.png" --out "out/eat-promo-$n.jpg" >/dev/null
+  rm "out/eat-promo-$n.png"
+  echo "  built out/eat-promo-$n.jpg"
 done
