@@ -1,5 +1,32 @@
 # Release Notes for Eat
 
+## 5.0.1 - 2026-10-05
+
+### Security
+
+- **Anybody with "Manage feeds" could publish the site's secrets.** A Twig template mapping runs as
+  a full object template — `craft.app` and all — and its output goes into the preview, the
+  generated file and the public live route, so `{{ craft.app.config.general.securityKey }}` in a
+  mapping published the security key. Template mappings are now written by admins only: a user
+  with "Manage feeds" can keep or remove one an admin wrote, but not add one or change its Twig —
+  checked on the preview as well as the save, since the preview renders unsaved mappings. (Craft's
+  Twig sandbox was the other option, but its default policy blocks the Commerce data feed templates
+  exist for.)
+
+### Fixed
+
+- **A burst of fetches during a cache miss rebuilt the whole catalogue in every request at once**,
+  pinning PHP workers. The live route now rebuilds under a lock; requests that arrive meanwhile get
+  the last good feed, or a `503` with `Retry-After` the first time.
+- **Saving a feed could quietly drop its Twig template mappings.** The source select shows "Twig
+  template" disabled to anyone who may not write one — a non-admin, or every user on Lite — and a
+  browser doesn't submit a disabled option, so the row came back with no source. A row posted
+  without a source now keeps its stored template.
+
+### Changed
+
+- PHPStan and ECS configuration, and the findings they raised tidied.
+
 ## 5.0.0 - 2026-08-19
 
 Initial release.

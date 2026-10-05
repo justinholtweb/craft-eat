@@ -3,7 +3,6 @@
 namespace justinholtweb\eat\controllers;
 
 use Craft;
-use craft\helpers\UrlHelper;
 use craft\web\Controller;
 use justinholtweb\eat\Plugin;
 use yii\web\ForbiddenHttpException;

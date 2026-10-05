@@ -73,7 +73,7 @@ Each row of the attribute map has a **source**:
 | Custom field | a field handle, optionally with a path: `gallery.0.url` |
 | Static value | the literal text written in every row |
 | Taxonomy map | `productType`, or a field handle to map from |
-| Twig template (Pro) | `{{ object.product.myField }}` — `object` is the variant |
+| Twig template (Pro, admins) | `{{ object.product.myField }}` — `object` is the variant. Only admins write these |
 
 Variant fields win over product fields, so a variant-level override does what you expect.
 

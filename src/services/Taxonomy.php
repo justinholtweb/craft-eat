@@ -2,11 +2,9 @@
 
 namespace justinholtweb\eat\services;
 
-use Craft;
 use craft\base\Component;
 use craft\commerce\Plugin as Commerce;
 use craft\db\Query;
-use craft\helpers\Db;
 use craft\helpers\StringHelper;
 use justinholtweb\eat\db\Table;
 use justinholtweb\eat\records\TaxonomyRecord;

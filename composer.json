@@ -1,7 +1,7 @@
 {
     "name": "justinholtweb/craft-eat",
     "description": "Product feeds for Craft Commerce — Google, Meta, Pinterest, Bing, TikTok and a dozen more, generated on a schedule and delivered wherever the channel wants them.",
-    "version": "5.0.0",
+    "version": "5.0.1",
     "type": "craft-plugin",
     "keywords": [
         "craftcms",
@@ -62,5 +62,10 @@
         "documentationUrl": "https://justinholt.com/plugins/craft-eat/docs",
         "changelogUrl": "https://raw.githubusercontent.com/justinholtweb/craft-eat/main/CHANGELOG.md",
         "class": "justinholtweb\\eat\\Plugin"
+    },
+    "require-dev": {
+        "craftcms/ecs": "dev-main",
+        "craftcms/phpstan": "dev-main",
+        "phpstan/phpstan": "^1.12 || ^2.2"
     }
 }

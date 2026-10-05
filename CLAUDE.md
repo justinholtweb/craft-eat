@@ -58,6 +58,18 @@ a new feed useful the moment it is created.
 `ns` on an attribute is load-bearing: RSS's own `title`, `link` and `description` must **not** be
 written as `<g:title>`, and everything else must be.
 
+### Twig template mappings are admin-written (5.0.1)
+
+A template mapping renders unsandboxed (`View::renderObjectTemplate`) and its output is published,
+so `FeedsController::_guardTemplates()` refuses a non-admin adding or changing one — on **save and
+preview** (the preview renders posted mappings). Craft's sandbox was rejected: its default policy
+blocks `Variant::sku`/`price`/`product`, i.e. everything a feed template is for. `_mappings()`
+restores a stored template for a row posted with no `source` — a browser doesn't submit a disabled
+`<option>`, and the select disables "Twig template" for non-admins and on Lite.
+
+The live route rebuilds under the `eat:live:build:<id>` mutex; concurrent requests get
+`eat:live:last:<id>` (the last good body) or a 503 + `Retry-After`.
+
 ### Editions
 
 `Feeds::LITE_FEED_LIMIT` (2) and `Feeds::LITE_CHANNELS` (google, meta) gate creation;
@@ -98,7 +110,9 @@ No local PHP on this Mac. Everything runs inside the plugin-testing container:
 ```sh
 cd ~/Sites/plugin-testing
 ddev exec php /var/www/craft-eat/tests/integration/checks.php                     # 108 checks
-ddev exec bash -c 'cd /var/www/html && bash /var/www/craft-eat/tests/smoke.sh'    # 16 CP checks
+docker exec -w /var/www/html ddev-plugin-testing-web php /var/www/craft-eat/tests/integration/security.php   # 8: template guard over HTTP, live-route lock
+docker exec -w /sites/craft-eat ddev-phpstan-runner-web bash -c 'vendor/bin/phpstan analyse --memory-limit=1G && vendor/bin/ecs check'
+bash ~/Sites/craft-eat/tests/smoke.sh   # 16 CP checks — from the HOST (the container can't reach the router's hostname)
 ddev exec bash -c 'find /var/www/craft-eat/src -name "*.php" -print0 | xargs -0 -n1 php -l'
 ```
 
@@ -108,7 +122,9 @@ the run and exercises Lite in its own section. It includes live HTTP fetches of 
 file and of the live route, so a green run means the URL a merchant pastes into Merchant Center
 actually serves the feed.
 
-`tests/smoke.sh` logs into the CP with a real session and walks every screen and action.
+`tests/smoke.sh` logs into the CP with a real session and walks every screen and action. It runs
+from the **host** against `BASE` (the router's hostname); when the DDEV router is broken, point a
+copy at the project's direct port from `ddev describe` (e.g. `:33001`).
 
 **Harness note:** `craft-penny` registers an `Elements::EVENT_BEFORE_SAVE_ELEMENT` handler typed
 `ModelEvent` while Craft passes an `ElementEvent`, so every element save in the harness fatals while

@@ -30,7 +30,14 @@ certainly mean, so the work is filling the handful your catalogue models differe
 | Custom field | A field handle, optionally with a path: `gallery.0.url` |
 | Static value | The literal text, written in every row |
 | Taxonomy map | `productType`, or a field handle to map from |
-| Twig template (Pro) | `{{ object.product.myField }}` — `object` is the variant |
+| Twig template (Pro, admins) | `{{ object.product.myField }}` — `object` is the variant. Only admins write these |
+
+**Twig templates are written by admins.** A template runs with the full power of Twig — it can
+reach anything on `craft.app` — and its output is published in the feed. So since 5.0.1 only an
+admin can add one or change its Twig; a user with **Manage feeds** can keep or remove a template an
+admin wrote, and sees the source offered as *admins only*. Craft's Twig sandbox would be the other
+way to do this, but its default policy blocks the Commerce data a feed template exists for (a
+variant's `sku`, `price` and `product`).
 
 Variant fields win over product fields, so a variant-level override does what you would expect.
 A custom field that holds elements resolves to their titles; an Assets field resolves to URLs; a

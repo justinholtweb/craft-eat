@@ -86,7 +86,9 @@ destination is down, and you can look at exactly what was sent.
 
 **Serve a live URL** makes `/eat/feed/<handle>` generate on request, cached for the feed's
 interval. Good for small catalogues and for channels that fetch rarely; a poor idea for 50,000
-products.
+products. When the cache runs out, one request rebuilds the feed while every other one is handed
+the last good copy — or, the very first time, a `503` with `Retry-After` — rather than each
+rebuilding the whole catalogue at once.
 
 ### Google Merchant Center credentials
 

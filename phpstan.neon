@@ -1,0 +1,15 @@
+includes:
+    - vendor/craftcms/phpstan/phpstan.neon
+
+parameters:
+    level: 4
+    paths:
+        - src
+    excludePaths:
+        - src/templates
+    # Settings and rules arrive from project config, which can be hand-edited: the type checks
+    # against PHPDoc shapes are deliberate, not redundant.
+    treatPhpDocTypesAsCertain: false
+    # phpseclib is suggested, not required — only SFTP delivery uses it, behind a class_exists check.
+    ignoreErrors:
+        - '#phpseclib3#'

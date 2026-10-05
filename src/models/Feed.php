@@ -7,7 +7,6 @@ use craft\base\Model;
 use craft\commerce\elements\conditions\products\ProductCondition;
 use craft\helpers\ArrayHelper;
 use craft\helpers\Json;
-use craft\helpers\StringHelper;
 use craft\helpers\UrlHelper;
 use craft\validators\UniqueValidator;
 use DateTime;

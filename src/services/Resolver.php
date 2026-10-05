@@ -11,7 +11,6 @@ use craft\commerce\Plugin as Commerce;
 use craft\elements\Asset;
 use craft\fields\Assets as AssetsField;
 use craft\helpers\App;
-use craft\helpers\StringHelper;
 use justinholtweb\eat\helpers\Value;
 use justinholtweb\eat\models\Channel;
 use justinholtweb\eat\models\Feed;
@@ -99,13 +98,13 @@ class Resolver extends Component
         $variant ??= $product->getDefaultVariant();
 
         return match ($name) {
-            'id' => (string)($variant?->id ?? $product->id),
+            'id' => (string)($variant->id ?? $product->id),
             'productId' => (string)$product->id,
-            'variantId' => (string)($variant?->id ?? ''),
+            'variantId' => (string)($variant->id ?? ''),
             'uid' => (string)$product->uid,
             'sku' => (string)($variant?->getSku() ?? ''),
             'title', 'productTitle' => (string)$product->title,
-            'variantTitle' => (string)($variant?->title ?? ''),
+            'variantTitle' => (string)($variant->title ?? ''),
             'fullTitle' => $this->_fullTitle($product, $variant),
             'slug' => (string)$product->slug,
             'description' => $this->_description($product, $variant, false),
@@ -126,7 +125,7 @@ class Resolver extends Component
             'availability' => $this->_availability($channel, $variant),
             'stock' => $this->_stock($variant),
             'inStock' => $variant && ($variant->getHasUnlimitedStock() || $variant->getStock() > 0) ? 'yes' : 'no',
-            'condition' => (string)($channel?->condition ?? 'new'),
+            'condition' => (string)($channel->condition ?? 'new'),
             'brand' => $this->_brand(),
             'productType' => (string)$product->getType()->handle,
             'productTypeName' => $this->_typeName($product),
@@ -142,13 +141,13 @@ class Resolver extends Component
             'dateUpdated' => $product->dateUpdated?->format('Y-m-d\TH:i:sP') ?? '',
             'postDate' => $product->postDate?->format('Y-m-d\TH:i:sP') ?? '',
             'expiryDate' => $product->expiryDate?->format('Y-m-d\TH:i:sP') ?? '',
-            'siteName' => (string)($feed->getSite()?->name ?? ''),
+            'siteName' => (string)($feed->getSite()->name ?? ''),
             'storeName' => $this->_storeName($feed),
             'taxCategory' => $this->_safe(static fn() => $variant?->getTaxCategory()?->name),
             'shippingCategory' => $this->_safe(static fn() => $variant?->getShippingCategory()?->name),
             'freeShipping' => $variant?->freeShipping ? 'yes' : 'no',
-            'minQty' => (string)($variant?->minQty ?? ''),
-            'maxQty' => (string)($variant?->maxQty ?? ''),
+            'minQty' => (string)($variant->minQty ?? ''),
+            'maxQty' => (string)($variant->maxQty ?? ''),
             'variantCount' => (string)$product->getVariants()->count(),
             default => '',
         };
@@ -302,7 +301,7 @@ class Resolver extends Component
     private function _fullTitle(Product $product, ?Variant $variant): string
     {
         $title = (string)$product->title;
-        $variantTitle = (string)($variant?->title ?? '');
+        $variantTitle = (string)($variant->title ?? '');
 
         if ($variantTitle === '' || $variantTitle === $title) {
             return $title;
@@ -365,7 +364,7 @@ class Resolver extends Component
      */
     private function _imageUrls(Feed $feed, Product $product, ?Variant $variant): array
     {
-        $cacheKey = $feed->id . ':' . $product->id . ':' . ($variant?->id ?? 0);
+        $cacheKey = $feed->id . ':' . $product->id . ':' . ($variant->id ?? 0);
 
         if (isset($this->_imageCache[$cacheKey])) {
             return $this->_imageCache[$cacheKey];

@@ -7,9 +7,9 @@ use craft\commerce\Plugin as Commerce;
 use craft\helpers\Json;
 use craft\helpers\StringHelper;
 use craft\helpers\UrlHelper;
+use craft\web\assets\admintable\AdminTableAsset;
 use craft\web\Controller;
 use craft\web\View;
-use craft\web\assets\admintable\AdminTableAsset;
 use justinholtweb\eat\channels\Registry;
 use justinholtweb\eat\helpers\Attributes;
 use justinholtweb\eat\helpers\Modifiers;
@@ -62,7 +62,7 @@ class FeedsController extends Controller
                 'schedule' => $feed->getIntervalLabel(),
                 'products' => $run ? (string)$run->itemCount : '—',
                 'lastRun' => $run?->dateCreated ? Craft::$app->getFormatter()->asRelativeTime($run->dateCreated) : '—',
-                'status' => $run?->status ?? 'never',
+                'status' => $run->status ?? 'never',
                 'enabled' => (bool)$feed->enabled,
                 'feedUrl' => $feed->getUrl(),
             ];
@@ -169,8 +169,9 @@ class FeedsController extends Controller
 
             $sourceOptions[] = [
                 'value' => $value,
-                'label' => Craft::t('eat', $label),
-                'disabled' => $pro && !$plugin->isPro(),
+                'label' => Craft::t('eat', $label) . ($pro && $plugin->isPro() && !Craft::$app->getUser()->getIsAdmin() ? ' — ' . Craft::t('eat', 'admins only') : ''),
+                // Twig templates are admin-only to write — see _guardTemplates().
+                'disabled' => $pro && (!$plugin->isPro() || !Craft::$app->getUser()->getIsAdmin()),
             ];
         }
 
@@ -255,7 +256,9 @@ class FeedsController extends Controller
                 $feed->getChannelDefinition()?->defaultMappings() ?? []
             ));
         } else {
-            $feed->setMappings($this->_mappings());
+            $mappings = $this->_mappings($feed);
+            $this->_guardTemplates($mappings, $feed);
+            $feed->setMappings($mappings);
         }
         $feed->setProductCondition($this->request->getBodyParam('productCondition'));
 
@@ -354,8 +357,10 @@ class FeedsController extends Controller
 
         // Preview an unsaved edit too, so a merchant can try a mapping before committing to it.
         if ($this->request->getBodyParam('mappings') !== null) {
+            $mappings = $this->_mappings($feed);
+            $this->_guardTemplates($mappings, $feed);
             $feed = clone $feed;
-            $feed->setMappings($this->_mappings());
+            $feed->setMappings($mappings);
             $feed->setFilters($this->_filters());
             $feed->setOptions($this->_feedOptions());
             $feed->format = $this->request->getBodyParam('format', $feed->format);
@@ -507,17 +512,77 @@ class FeedsController extends Controller
         return $delivery;
     }
 
-    private function _mappings(): array
+    /**
+     * Twig template mappings are written by admins only.
+     *
+     * A template runs as a full object template — `craft.app` and all — and its output is
+     * published: the preview, the generated file, the public live route. So a user with only
+     * "Manage feeds" could put `{{ craft.app.config.general.securityKey }}` in a mapping and read
+     * the result back. Craft's Twig sandbox would stop that, but its default policy also blocks
+     * the Commerce data a feed template exists for (`sku`, `price`, `variant.product`). Before
+     * 5.0.1 anybody with the permission could write one.
+     *
+     * A non-admin may keep or remove a template mapping an admin wrote; they may not add one or
+     * change its Twig. Checked for the preview as well as the save, because the preview renders
+     * the posted, unsaved mappings.
+     *
+     * @param array<int, array<string, mixed>> $mappings
+     * @throws ForbiddenHttpException
+     */
+    private function _guardTemplates(array $mappings, ?Feed $stored): void
+    {
+        if (Craft::$app->getUser()->getIsAdmin()) {
+            return;
+        }
+
+        $allowed = [];
+
+        if ($stored !== null && $stored->id) {
+            foreach ($stored->getMappings() as $mapping) {
+                if ($mapping->source === Mapping::SOURCE_TEMPLATE) {
+                    $allowed[] = $mapping->attribute . "\0" . (string)$mapping->value;
+                }
+            }
+        }
+
+        foreach ($mappings as $row) {
+            if (($row['source'] ?? null) === Mapping::SOURCE_TEMPLATE
+                && !in_array($row['attribute'] . "\0" . $row['value'], $allowed, true)
+            ) {
+                throw new ForbiddenHttpException(Craft::t('eat', 'Only admins can write Twig template mappings.'));
+            }
+        }
+    }
+
+    private function _mappings(?Feed $stored = null): array
     {
         $rows = $this->request->getBodyParam('mappings', []);
         $mappings = [];
         $pro = Plugin::getInstance()->isPro();
+
+        // The source select shows "Twig template" disabled to anybody who may not write one — a
+        // non-admin, or every user on Lite — and a browser does not submit a disabled option even
+        // when it is the one selected. So a row posted with no source, whose stored mapping is a
+        // template, is that template, unchanged. Without this, opening and saving a feed someone
+        // else built silently turned its template mappings into nothing.
+        $storedTemplates = [];
+
+        foreach ($stored?->id ? $stored->getMappings() : [] as $mapping) {
+            if ($mapping->source === Mapping::SOURCE_TEMPLATE) {
+                $storedTemplates[$mapping->attribute] = (string)$mapping->value;
+            }
+        }
 
         foreach ((array)$rows as $row) {
             $attribute = trim((string)($row['attribute'] ?? ''));
 
             if ($attribute === '') {
                 continue;
+            }
+
+            if (!isset($row['source']) && isset($storedTemplates[$attribute])) {
+                $row['source'] = Mapping::SOURCE_TEMPLATE;
+                $row['value'] = $storedTemplates[$attribute];
             }
 
             $mappings[] = [

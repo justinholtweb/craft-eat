@@ -18,6 +18,9 @@ use yii\web\Response;
  */
 class FeedController extends Controller
 {
+    /** Seconds a client is asked to wait when the first build of a feed is still running. */
+    public const RETRY_AFTER = 30;
+
     public array|bool|int $allowAnonymous = true;
     public $enableCsrfValidation = false;
 
@@ -46,16 +49,51 @@ class FeedController extends Controller
         }
 
         $cacheKey = 'eat:live:' . $feed->id . ':' . ($feed->dateUpdated?->getTimestamp() ?? 0);
+        $lastGoodKey = 'eat:live:last:' . $feed->id;
         $cache = Craft::$app->getCache();
         $body = $cache->get($cacheKey);
 
-        if (!is_string($body) || $body === '') {
-            $result = $plugin->getGenerator()->write($feed);
-            $body = (string)@file_get_contents($result['path']);
-            FileHelper::unlink($result['path']);
+        if (is_string($body) && $body !== '') {
+            return $this->_respond($feed, $body);
+        }
 
-            $duration = $feed->interval > 0 ? $feed->interval : $plugin->getSettings()->liveCacheDuration;
-            $cache->set($cacheKey, $body, max(60, $duration));
+        // One worker rebuilds; everyone else gets the last good feed, or is told to come back.
+        // Before 5.1.0 every request that arrived during a cache miss regenerated the whole
+        // catalogue at once, so a burst of fetches pinned every PHP worker.
+        $mutex = Craft::$app->getMutex();
+        $lock = 'eat:live:build:' . $feed->id;
+
+        if (!$mutex->acquire($lock)) {
+            $stale = $cache->get($lastGoodKey);
+
+            if (is_string($stale) && $stale !== '') {
+                return $this->_respond($feed, $stale);
+            }
+
+            $response = Craft::$app->getResponse();
+            $response->setStatusCode(503);
+            $response->getHeaders()->set('Retry-After', (string)self::RETRY_AFTER);
+            $response->format = Response::FORMAT_RAW;
+            $response->data = 'The feed is being generated. Try again shortly.';
+
+            return $response;
+        }
+
+        try {
+            // Another worker may have finished while this one waited for the lock.
+            $body = $cache->get($cacheKey);
+
+            if (!is_string($body) || $body === '') {
+                $result = $plugin->getGenerator()->write($feed);
+                $body = (string)@file_get_contents($result['path']);
+                FileHelper::unlink($result['path']);
+
+                $duration = $feed->interval > 0 ? $feed->interval : $plugin->getSettings()->liveCacheDuration;
+                $cache->set($cacheKey, $body, max(60, $duration));
+                $cache->set($lastGoodKey, $body, 7 * 86400);
+            }
+        } finally {
+            $mutex->release($lock);
         }
 
         return $this->_respond($feed, $body);

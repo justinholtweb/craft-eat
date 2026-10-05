@@ -2,7 +2,6 @@
 
 namespace justinholtweb\eat\channels;
 
-use Craft;
 use justinholtweb\eat\models\Channel;
 
 /**

@@ -15,7 +15,7 @@ class XmlWriter extends BaseWriter
 
         $namespaces = '';
 
-        foreach ($this->channel?->namespaces ?? [] as $prefix => $uri) {
+        foreach ($this->channel->namespaces ?? [] as $prefix => $uri) {
             $namespaces .= sprintf(' xmlns:%s="%s"', $prefix, $uri);
         }
 
@@ -65,7 +65,7 @@ class XmlWriter extends BaseWriter
 
     public function isRss(): bool
     {
-        return $this->feed->format === 'rss' && ($this->channel?->rss ?? false);
+        return $this->feed->format === 'rss' && ($this->channel->rss ?? false);
     }
 
     /**
@@ -113,12 +113,12 @@ class XmlWriter extends BaseWriter
 
     private function rootName(): string
     {
-        return $this->sanitiseName((string)($this->options['xmlRoot'] ?: ($this->channel?->xmlRoot ?? 'products')));
+        return $this->sanitiseName((string)($this->options['xmlRoot'] ?: ($this->channel->xmlRoot ?? 'products')));
     }
 
     private function itemName(): string
     {
-        return $this->sanitiseName((string)($this->options['xmlItem'] ?: ($this->channel?->xmlItem ?? 'product')));
+        return $this->sanitiseName((string)($this->options['xmlItem'] ?: ($this->channel->xmlItem ?? 'product')));
     }
 
     private function feedTitle(): string

@@ -16,4 +16,7 @@ interface WriterInterface
     public function write(array $row): void;
 
     public function close(): void;
+
+    /** How many rows were written. */
+    public function getWritten(): int;
 }

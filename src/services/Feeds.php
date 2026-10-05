@@ -5,7 +5,6 @@ namespace justinholtweb\eat\services;
 use Craft;
 use craft\base\Component;
 use craft\db\Query;
-use craft\helpers\DateTimeHelper;
 use craft\helpers\Db;
 use craft\helpers\FileHelper;
 use craft\helpers\Json;
@@ -395,7 +394,7 @@ class Feeds extends Component
 
         foreach (['siteId', 'storeId', 'interval', 'sortOrder'] as $key) {
             if (isset($config[$key])) {
-                $feed->$key = $config[$key] === null ? null : (int)$config[$key];
+                $feed->$key = (int)$config[$key];
             }
         }
 

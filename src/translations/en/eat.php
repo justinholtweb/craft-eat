@@ -17,4 +17,6 @@ return [
     'Feeds reordered.' => 'Feeds reordered.',
     'Taxonomy saved.' => 'Taxonomy saved.',
     'Run log cleared.' => 'Run log cleared.',
+    'Only admins can write Twig template mappings.' => 'Only admins can write Twig template mappings.',
+    'admins only' => 'admins only',
 ];
