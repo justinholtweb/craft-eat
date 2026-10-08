@@ -402,7 +402,7 @@ class FeedsController extends Controller
         $this->requireAcceptsJson();
 
         if (!Plugin::getInstance()->isPro()) {
-            return $this->asFailure(Craft::t('eat', 'Content API push is a Pro feature.'));
+            return $this->asFailure(Craft::t('eat', 'Merchant Center push is a Pro feature.'));
         }
 
         $config = [

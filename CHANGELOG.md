@@ -1,5 +1,34 @@
 # Release Notes for Eat
 
+## 5.1.0 - 2026-10-08
+
+> {warning} Merchant Center push now uses Google's **Merchant API**. Google sunset the Content API
+> for Shopping on 18 August 2026, and since 1 September it has been failing pushes with `410 Gone`.
+> After updating, make sure the service account has **admin** access to the Merchant Center
+> account, then press **Test the connection** once on each pushing feed.
+
+### Changed
+
+- Merchant Center push moved from the Content API for Shopping v2.1 to the Merchant API v1.
+  Products go into an API data source: name one in the feed's new **Data source** setting, or leave
+  it blank and Eat creates `Eat: <feed handle>` on the first push and reuses it after that.
+- **Test the connection** registers the Google Cloud project with the Merchant Center account,
+  which the Merchant API requires once before it will answer anything. A push does the same, so a
+  scheduled feed recovers without anyone opening the control panel.
+- Products are inserted eight requests at a time (the Merchant API has no batch endpoint), and a
+  product Google rate-limits is retried once at the end of its chunk. Rejections now name the
+  product: `SKU-1: Invalid GTIN`.
+- Prices are sent as exact micros worked out on the decimal string, so `19.99` is never `19.989999`.
+  Availability, condition, age group and gender are sent as the API's enum values (`in stock` →
+  `IN_STOCK`), dates as UTC timestamps, and a value the API wouldn't accept is left out instead of
+  failing the product.
+
+### Added
+
+- **Feed label** on Merchant Center delivery. It defaults to the target country, which is what the
+  Content API used, so products pushed by Eat 5.0 keep their identity.
+- **Destinations**: online and local, or local only (the Content API's `local` channel).
+
 ## 5.0.1 - 2026-10-05
 
 ### Security

@@ -11,7 +11,7 @@ channel wants it.
   a public feed URL.
 - **Pro** — $79. Every channel plus a custom template builder, output modifiers, condition-builder
   matching, taxonomy mapping, the run log, live URLs, asset volume / FTP / SFTP delivery, Google
-  Merchant Center Content API push, and the console commands.
+  Merchant Center push, and the console commands.
 
 ## Requirements
 
@@ -116,7 +116,7 @@ multiply:1.2 | number:2
 | File | Written under the feed directory, served from a stable public URL. Written to a staging file and renamed into place, so a channel fetching mid-run never gets half a feed. |
 | Volume (Pro) | Written into a Craft asset volume — S3, DigitalOcean Spaces, anything with a filesystem. |
 | FTP / SFTP (Pro) | Uploaded on every run. Use environment variables for the credentials. |
-| Merchant Center (Pro) | Pushed with the Content API v2.1 in batches of 100, authenticated with a service-account key. No Google SDK required. |
+| Merchant Center (Pro) | Pushed with Google's Merchant API, authenticated with a service-account key. No Google SDK required. |
 
 The local file is always written first, so the URL keeps working even when a remote destination is
 down — and the run log says which half failed.

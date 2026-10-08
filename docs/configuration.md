@@ -76,7 +76,7 @@ value, a related element, a date — can decide what is in the feed.
 | File | Written under the feed directory and served from a stable public URL. |
 | Asset volume | Written into a Craft volume's filesystem, so S3 and friends work. |
 | FTP / SFTP | Uploaded on every run. Use environment variables for credentials. |
-| Google Merchant Center | Pushed with the Content API v2.1 in batches of 100. |
+| Google Merchant Center | Pushed with Google's Merchant API into an API data source, eight products at a time. |
 
 The local file is written first in every mode, so the URL keeps working even when a remote
 destination is down, and you can look at exactly what was sent.
@@ -93,11 +93,23 @@ rebuilding the whole catalogue at once.
 ### Google Merchant Center credentials
 
 1. In Google Cloud, create a service account and download its JSON key.
-2. Give that service account access to your Merchant Center account (Settings → Users → Add user,
-   using the service account's email).
-3. Store the key **outside the web root** and point **Service account credentials** at the path, or
+2. Enable the **Merchant API** for that Google Cloud project.
+3. Give that service account **admin** access to your Merchant Center account (Settings → People
+   and access → Add person, using the service account's email). Admin is needed once, to register
+   the Cloud project with the account; Google refuses every call until that is done.
+4. Store the key **outside the web root** and point **Service account credentials** at the path, or
    put the JSON itself in an environment variable and use `$MY_VAR`.
-4. Enter the Merchant Center account ID and press **Test the connection**.
+5. Enter the Merchant Center account ID and press **Test the connection**. That registers the
+   project and confirms Eat can reach the account.
+
+Products go into an **API data source**. Leave **Data source** blank and Eat creates one called
+`Eat: <feed handle>` the first time it pushes, targeting the feed's country; or create your own in
+Merchant Center and paste its ID. **Feed label** defaults to the target country, which is what the
+Content API used, so products pushed by Eat 5.0 keep their identity.
+
+> {note} Eat 5.0 pushed through the Content API for Shopping, which Google sunset on 18 August
+> 2026. Eat 5.1 uses the Merchant API instead. Nothing in your feed changes, but check the
+> service account has admin access and press **Test the connection** once after updating.
 
 ## Scheduling
 

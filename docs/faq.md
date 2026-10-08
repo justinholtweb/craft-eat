@@ -49,7 +49,7 @@ so a feed per market is a feed per site.
 
 ## Do I need a Google Cloud project?
 
-Only for Content API push. The ordinary way to use Merchant Center — giving it a URL and letting it
+Only for Merchant Center push. The ordinary way to use Merchant Center — giving it a URL and letting it
 fetch on a schedule — needs nothing but the feed URL.
 
 ## What happens if a channel fetches the file mid-run?

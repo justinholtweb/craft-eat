@@ -414,8 +414,25 @@
             <div class="flex">
                 {{ forms.textField({ label: "Target country"|t('eat'), name: 'delivery[merchant][targetCountry]', value: delivery.merchant.targetCountry, size: 4 }) }}
                 {{ forms.textField({ label: "Content language"|t('eat'), name: 'delivery[merchant][contentLanguage]', value: delivery.merchant.contentLanguage, size: 4 }) }}
-                {{ forms.textField({ label: "Channel"|t('eat'), name: 'delivery[merchant][channel]', value: delivery.merchant.channel, size: 8 }) }}
+                {{ forms.textField({ label: "Feed label"|t('eat'), name: 'delivery[merchant][feedLabel]', value: delivery.merchant.feedLabel, placeholder: delivery.merchant.targetCountry ?: 'US', size: 10 }) }}
             </div>
+            {{ forms.selectField({
+                label: "Destinations"|t('eat'),
+                name: 'delivery[merchant][channel]',
+                value: delivery.merchant.channel,
+                options: [
+                    { label: "Online and local"|t('eat'), value: 'online' },
+                    { label: "Local only"|t('eat'), value: 'local' },
+                ]
+            }) }}
+            {{ forms.autosuggestField({
+                label: "Data source"|t('eat'),
+                instructions: "The Merchant Center API data source to push into, by ID. Leave blank and Eat creates one called “Eat: {handle}” the first time it pushes."|t('eat', { handle: feed.handle ?: 'feed-handle' }),
+                name: 'delivery[merchant][dataSource]',
+                suggestEnvVars: true,
+                id: 'merchantDataSource',
+                value: delivery.merchant.dataSource
+            }) }}
             <div class="field">
                 <div class="input">
                     <button type="button" id="eat-test-merchant" class="btn">{{ "Test the connection"|t('eat') }}</button>

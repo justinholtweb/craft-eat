@@ -1103,48 +1103,163 @@ try {
     // ---------------------------------------------------------- Merchant API
     section('Merchant Center mapping');
 
-    check('feed attributes become Content API fields', function() use ($plugin) {
-        $resource = $plugin->getMerchant()->productResource([
+    check('feed attributes become a Merchant API ProductInput', function() use ($plugin) {
+        $input = $plugin->getMerchant()->productInput([
             'id' => 'SKU-1',
             'title' => 'A shirt',
             'link' => 'https://example.com/shirt',
             'image_link' => 'https://example.com/shirt.jpg',
-            'additional_image_link' => ['https://example.com/2.jpg'],
+            'additional_image_link' => ['https://example.com/2.jpg', ''],
             'price' => '19.99 USD',
             'sale_price' => '9.99 USD',
-            'availability' => 'in_stock',
+            'availability' => 'in stock',
+            'condition' => 'new',
+            'gender' => 'Unisex',
             'is_bundle' => 'yes',
+            'gtin' => '9780007350896',
             'product_type' => 'Shirts',
+            'size' => ['M'],
+            'multipack' => '6',
+            'availability_date' => '2026-11-01T00:00-0500',
         ], ['targetCountry' => 'gb', 'contentLanguage' => 'EN']);
 
-        if (($resource['offerId'] ?? '') !== 'SKU-1' || ($resource['imageLink'] ?? '') === '') {
-            return Json::encode($resource);
+        $attributes = $input['productAttributes'] ?? [];
+
+        if (($input['offerId'] ?? '') !== 'SKU-1' || ($input['feedLabel'] ?? '') !== 'GB' || ($input['contentLanguage'] ?? '') !== 'en') {
+            return 'identity is ' . Json::encode(array_diff_key($input, ['productAttributes' => 1]));
         }
 
-        if (($resource['price']['value'] ?? '') !== '19.99' || ($resource['price']['currency'] ?? '') !== 'USD') {
-            return 'price is ' . Json::encode($resource['price'] ?? null);
+        if (isset($input['channel']) || isset($input['targetCountry']) || isset($attributes['offerId'])) {
+            return 'Content API fields leaked into the payload';
         }
 
-        if (($resource['salePrice']['value'] ?? '') !== '9.99') {
-            return 'sale price is ' . Json::encode($resource['salePrice'] ?? null);
+        if (($attributes['price'] ?? null) !== ['amountMicros' => '19990000', 'currencyCode' => 'USD']) {
+            return 'price is ' . Json::encode($attributes['price'] ?? null);
         }
 
-        if (!is_array($resource['additionalImageLinks'] ?? null) || !is_array($resource['productTypes'] ?? null)) {
-            return 'repeated fields are not arrays';
+        if (($attributes['salePrice']['amountMicros'] ?? '') !== '9990000') {
+            return 'sale price is ' . Json::encode($attributes['salePrice'] ?? null);
         }
 
-        if (($resource['isBundle'] ?? null) !== true) {
-            return 'isBundle is not a boolean';
+        if (($attributes['additionalImageLinks'] ?? null) !== ['https://example.com/2.jpg'] || ($attributes['gtins'] ?? null) !== ['9780007350896'] || ($attributes['productTypes'] ?? null) !== ['Shirts']) {
+            return 'repeated fields are ' . Json::encode([$attributes['additionalImageLinks'] ?? null, $attributes['gtins'] ?? null, $attributes['productTypes'] ?? null]);
         }
 
-        return ($resource['targetCountry'] ?? '') === 'GB' && ($resource['contentLanguage'] ?? '') === 'en'
-            ?: 'country/language casing is wrong';
+        if (($attributes['availability'] ?? '') !== 'IN_STOCK' || ($attributes['condition'] ?? '') !== 'NEW' || ($attributes['gender'] ?? '') !== 'UNISEX') {
+            return 'enums are ' . Json::encode([$attributes['availability'] ?? null, $attributes['condition'] ?? null, $attributes['gender'] ?? null]);
+        }
+
+        if (($attributes['isBundle'] ?? null) !== true || ($attributes['size'] ?? '') !== 'M' || ($attributes['multipack'] ?? '') !== '6') {
+            return 'scalars are ' . Json::encode([$attributes['isBundle'] ?? null, $attributes['size'] ?? null, $attributes['multipack'] ?? null]);
+        }
+
+        return ($attributes['availabilityDate'] ?? '') === '2026-11-01T05:00:00Z'
+            ?: 'availabilityDate is ' . Json::encode($attributes['availabilityDate'] ?? null);
     });
 
-    check('unknown attributes are left out of the API payload', function() use ($plugin) {
-        $resource = $plugin->getMerchant()->productResource(['id' => 'x', 'made_up' => 'y'], []);
+    check('prices become exact micros, never floats', function() use ($plugin) {
+        $merchant = $plugin->getMerchant();
+        $cases = [
+            '19.99 USD' => ['19990000', 'USD'],
+            '1,234.5 eur' => ['1234500000', 'EUR'],
+            '0.10' => ['100000', 'USD'],
+            '0' => ['0', 'USD'],
+            '12.1234567 GBP' => ['12123456', 'GBP'],
+        ];
 
-        return !isset($resource['made_up']) ?: 'an unknown attribute was sent to Google';
+        foreach ($cases as $raw => [$micros, $currency]) {
+            $money = $merchant->money($raw);
+
+            if (($money['amountMicros'] ?? null) !== $micros || ($money['currencyCode'] ?? null) !== $currency) {
+                return "$raw became " . Json::encode($money);
+            }
+        }
+
+        return $merchant->money('call us') === null && $merchant->money('') === null ?: 'a non-price parsed';
+    });
+
+    check('values the API cannot take are left out, not sent wrong', function() use ($plugin) {
+        $input = $plugin->getMerchant()->productInput([
+            'id' => 'x',
+            'made_up' => 'y',
+            'availability' => 'sometimes',
+            'availability_date' => 'next tuesday-ish',
+            'multipack' => 'six',
+            'title' => '',
+        ], []);
+        $attributes = (array)$input['productAttributes'];
+
+        if (isset($input['made_up']) || isset($attributes['made_up'])) {
+            return 'an unknown attribute was sent to Google';
+        }
+
+        return !isset($attributes['availability']) && !isset($attributes['availabilityDate']) && !isset($attributes['multipack']) && !isset($attributes['title'])
+            ?: 'kept ' . Json::encode($attributes);
+    });
+
+    check('a feed label overrides the country, and the local channel becomes legacyLocal', function() use ($plugin) {
+        $merchant = $plugin->getMerchant();
+        $default = $merchant->productInput(['id' => 'x'], []);
+        $labelled = $merchant->productInput(['id' => 'x'], ['targetCountry' => 'DE', 'feedLabel' => 'de_main', 'channel' => 'local']);
+
+        if (($default['feedLabel'] ?? '') !== 'US' || isset($default['legacyLocal'])) {
+            return 'default is ' . Json::encode($default);
+        }
+
+        return ($labelled['feedLabel'] ?? '') === 'DE_MAIN' && ($labelled['legacyLocal'] ?? false) === true
+            ?: 'labelled is ' . Json::encode($labelled);
+    });
+
+    check('a configured data source is used as given, by ID or full name', function() use ($plugin) {
+        $merchant = $plugin->getMerchant();
+        $client = Craft::createGuzzleClient();
+        $feed = new \justinholtweb\eat\models\Feed(['handle' => 'x']);
+
+        $byId = $merchant->dataSource($client, 'token', '123', $feed, ['dataSource' => '456']);
+        $byName = $merchant->dataSource($client, 'token', '123', $feed, ['dataSource' => 'accounts/123/dataSources/789']);
+
+        return $byId === 'accounts/123/dataSources/456' && $byName === 'accounts/123/dataSources/789'
+            ?: Json::encode([$byId, $byName]);
+    });
+
+    check('inserts count accepted and rejected products, and retry a rate limit once', function() use ($plugin) {
+        $mock = new \GuzzleHttp\Handler\MockHandler([
+            new \GuzzleHttp\Psr7\Response(200, [], '{}'),
+            new \GuzzleHttp\Psr7\Response(400, [], '{"error":{"message":"Invalid GTIN","status":"INVALID_ARGUMENT"}}'),
+            new \GuzzleHttp\Psr7\Response(429, [], '{"error":{"message":"slow down"}}'),
+            new \GuzzleHttp\Psr7\Response(200, [], '{}'),
+        ]);
+        $history = [];
+        $stack = \GuzzleHttp\HandlerStack::create($mock);
+        $stack->push(\GuzzleHttp\Middleware::history($history));
+        $client = new \GuzzleHttp\Client(['handler' => $stack]);
+
+        $merchant = $plugin->getMerchant();
+        $products = [
+            $merchant->productInput(['id' => 'A'], []),
+            $merchant->productInput(['id' => 'B'], []),
+            $merchant->productInput(['id' => 'C'], []),
+        ];
+
+        $sent = 0;
+        $failed = 0;
+        $errors = [];
+        $method = new \ReflectionMethod($merchant, '_insert');
+        $method->invokeArgs($merchant, [$client, 'token', 'https://merchantapi.googleapis.com/products/v1/accounts/1/productInputs:insert?dataSource=x', $products, &$sent, &$failed, &$errors]);
+
+        if ($sent !== 2 || $failed !== 1 || count($history) !== 4) {
+            return "sent $sent, failed $failed, requests " . count($history);
+        }
+
+        if (!str_contains($errors[0] ?? '', 'B: Invalid GTIN')) {
+            return 'error was ' . Json::encode($errors);
+        }
+
+        $first = $history[0]['request'];
+
+        return $first->getHeaderLine('Authorization') === 'Bearer token' && ($first->getMethod() === 'POST')
+            && Json::decode((string)$first->getBody())['offerId'] === 'A'
+            ?: 'first request was malformed';
     });
 
     check('base64url leaves no padding or unsafe characters', function() use ($plugin) {

@@ -1,7 +1,7 @@
 {
     "name": "justinholtweb/craft-eat",
     "description": "Product feeds for Craft Commerce — Google, Meta, Pinterest, Bing, TikTok and a dozen more, generated on a schedule and delivered wherever the channel wants them.",
-    "version": "5.0.1",
+    "version": "5.1.0",
     "type": "craft-plugin",
     "keywords": [
         "craftcms",

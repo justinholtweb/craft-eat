@@ -137,7 +137,7 @@ class Feed extends Model
             'volumePath' => '',
             'ftp' => ['host' => null, 'port' => 21, 'username' => null, 'password' => null, 'path' => null, 'passive' => true, 'secure' => false],
             'sftp' => ['host' => null, 'port' => 22, 'username' => null, 'password' => null, 'privateKey' => null, 'path' => null],
-            'merchant' => ['merchantId' => null, 'serviceAccount' => null, 'targetCountry' => 'US', 'contentLanguage' => 'en', 'channel' => 'online'],
+            'merchant' => ['merchantId' => null, 'serviceAccount' => null, 'targetCountry' => 'US', 'contentLanguage' => 'en', 'feedLabel' => null, 'dataSource' => null, 'channel' => 'online'],
         ];
     }
 

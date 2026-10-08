@@ -33,7 +33,7 @@ scheduled regeneration, real delivery, and a run log that says what happened.
 ### The two invariants
 
 1. **`services\Generator::rows()` is the only place a product becomes feed rows.** The CP preview,
-   the live route, the scheduled write, the queue job, the console command and the Content API push
+   the live route, the scheduled write, the queue job, the console command and the Merchant API push
    all iterate that one generator. A preview that is not the feed is worse than no preview.
 2. **`services\Delivery::deliver()` is the only place a generated file leaves the plugin.** File,
    volume, FTP, SFTP and Merchant Center all land there, so every destination produces the same
@@ -77,6 +77,18 @@ The live route rebuilds under the `eat:live:build:<id>` mutex; concurrent reques
 `Delivery` falls back to file delivery. Lite behaviour is exercised in its own section of the check
 suite, in both directions.
 
+### Merchant Center push is the Merchant API (5.1.0)
+
+The Content API for Shopping v2.1 was sunset 2026-08-18 (410s from 2026-09-01). `services\Merchant`
+now talks to `merchantapi.googleapis.com`: `productInputs:insert` one product per request through a
+Guzzle `Pool` (no batch endpoint), into an **API data source** (`dataSource` setting, or found/created
+by display name `Eat: <handle>`), after a one-time `developerRegistration:registerGcp` that needs the
+service account to be an account admin. Registration failure is returned as a note, not thrown — the
+project may already be registered by someone else. Prices are `amountMicros` computed on the decimal
+string; enums are upper-case (`IN_STOCK`); `feedLabel` defaults to the target country so 5.0 offers
+keep their identity. The harness has no outbound network, so `checks.php` tests the request handling
+with Guzzle's `MockHandler`; nothing here has been run against a real Merchant Center account.
+
 ## Traps found while building this
 
 - **`craft\helpers\FileHelper::isAbsolutePath()` does not exist** — neither Craft's nor Yii's
@@ -109,7 +121,7 @@ No local PHP on this Mac. Everything runs inside the plugin-testing container:
 
 ```sh
 cd ~/Sites/plugin-testing
-ddev exec php /var/www/craft-eat/tests/integration/checks.php                     # 108 checks
+ddev exec php /var/www/craft-eat/tests/integration/checks.php                     # 112 checks
 docker exec -w /var/www/html ddev-plugin-testing-web php /var/www/craft-eat/tests/integration/security.php   # 8: template guard over HTTP, live-route lock
 docker exec -w /sites/craft-eat ddev-phpstan-runner-web bash -c 'vendor/bin/phpstan analyse --memory-limit=1G && vendor/bin/ecs check'
 bash ~/Sites/craft-eat/tests/smoke.sh   # 16 CP checks — from the HOST (the container can't reach the router's hostname)

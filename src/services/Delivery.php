@@ -13,7 +13,7 @@ use Throwable;
 /**
  * The one place a generated file leaves the plugin.
  *
- * Everything — the local file, an asset volume, FTP, SFTP and the Content API — lands here, so a
+ * Everything — the local file, an asset volume, FTP, SFTP and the Merchant API — lands here, so a
  * merchant reading the run log is reading one story, not five.
  */
 class Delivery extends Component
@@ -31,7 +31,7 @@ class Delivery extends Component
             self::MODE_VOLUME => Craft::t('eat', 'Write into an asset volume'),
             self::MODE_FTP => Craft::t('eat', 'Upload over FTP'),
             self::MODE_SFTP => Craft::t('eat', 'Upload over SFTP'),
-            self::MODE_MERCHANT => Craft::t('eat', 'Push to Google Merchant Center (Content API)'),
+            self::MODE_MERCHANT => Craft::t('eat', 'Push to Google Merchant Center (Merchant API)'),
         ];
     }
 
