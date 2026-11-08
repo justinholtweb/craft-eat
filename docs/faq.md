@@ -54,8 +54,23 @@ fetch on a schedule — needs nothing but the feed URL.
 
 ## What happens if a channel fetches the file mid-run?
 
-It gets the previous feed. The new one is written to a staging file and renamed into place, which
-is atomic on every filesystem Craft runs on.
+It gets the previous feed, whichever destination it fetches from. Eat never writes a feed where a
+channel can read it:
+
+- **The local file** is written to `<name>.tmp` beside the target and renamed over it — an atomic
+  `rename()` on every filesystem Craft runs on.
+- **An asset volume** gets the same staging file and a rename through the volume's filesystem. On a
+  local volume that is an atomic `rename()`; on S3, Spaces and the like it is a server-side copy,
+  which replaces the object whole.
+- **FTP and SFTP** upload to `<name>.tmp` and rename it over the old file. SFTP uses OpenSSH's
+  atomic `posix-rename` where the server offers it. A server that refuses to rename over an
+  existing file has the old one deleted first, so there is a moment with no file at all — a 404
+  the channel retries — and never one with half a file.
+- **The live route** rebuilds under a lock. A request that arrives mid-build gets the last complete
+  body, or a `503` with `Retry-After` if there isn't one yet.
+
+(In 5.1.0 and earlier this was true of the local file and the live route only. Volume, FTP and SFTP wrote
+straight to the target.)
 
 ## What if the FTP server is down?
 

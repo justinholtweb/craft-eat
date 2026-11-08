@@ -1,5 +1,25 @@
 # Release Notes for Eat
 
+## 5.2.0 - 2026-11-08
+
+### Added
+
+- **Category path** attribute source. Point it at a Categories field, or an Entries field relating
+  a Structure section, and each related item is written with its parents:
+  `Fiction > Crime > Nordic`, for `product_type`. A selection that already includes the parents is
+  still one path. Products in two branches get two paths. Available on Lite.
+  ([#2](https://github.com/justinholtweb/craft-eat/issues/2))
+- **Google Ads dynamic remarketing (business data)** channel: Google Ads' "Custom" business data
+  CSV — `ID`, `Item title`, `Final URL`, `Image URL`, `Item description`, `Item category`, `Price`,
+  `Sale price` pre-mapped, and the rest of Google's columns ready to switch on.
+  ([#2](https://github.com/justinholtweb/craft-eat/issues/2))
+
+### Fixed
+
+- Asset volume, FTP and SFTP delivery wrote straight over the published feed, so a channel fetching
+  mid-run could get half a file. They now write a `.tmp` file beside the target and rename it into
+  place, as the local file always has.
+
 ## 5.1.0 - 2026-10-08
 
 > {warning} Merchant Center push now uses Google's **Merchant API**. Google sunset the Content API

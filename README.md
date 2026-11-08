@@ -73,6 +73,7 @@ Each row of the attribute map has a **source**:
 | Custom field | a field handle, optionally with a path: `gallery.0.url` |
 | Static value | the literal text written in every row |
 | Taxonomy map | `productType`, or a field handle to map from |
+| Category path | a Categories or Entries field handle — written as `Fiction > Crime > Nordic` |
 | Twig template (Pro, admins) | `{{ object.product.myField }}` — `object` is the variant. Only admins write these |
 
 Variant fields win over product fields, so a variant-level override does what you expect.
@@ -114,8 +115,8 @@ multiply:1.2 | number:2
 | Mode | What happens |
 |---|---|
 | File | Written under the feed directory, served from a stable public URL. Written to a staging file and renamed into place, so a channel fetching mid-run never gets half a feed. |
-| Volume (Pro) | Written into a Craft asset volume — S3, DigitalOcean Spaces, anything with a filesystem. |
-| FTP / SFTP (Pro) | Uploaded on every run. Use environment variables for the credentials. |
+| Volume (Pro) | Written into a Craft asset volume — S3, DigitalOcean Spaces, anything with a filesystem. Staged and renamed into place, like the file. |
+| FTP / SFTP (Pro) | Uploaded beside the target on every run and renamed over it. Use environment variables for the credentials. |
 | Merchant Center (Pro) | Pushed with Google's Merchant API, authenticated with a service-account key. No Google SDK required. |
 
 The local file is always written first, so the URL keeps working even when a remote destination is

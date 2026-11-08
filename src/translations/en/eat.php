@@ -29,4 +29,8 @@ return [
     'Could not list Merchant Center data sources: {message}' => 'Could not list Merchant Center data sources: {message}',
     'Could not create a Merchant Center data source: {message}' => 'Could not create a Merchant Center data source: {message}',
     'Registering the Google Cloud project with this account also failed ({message}); the service account needs admin access to register it.' => 'Registering the Google Cloud project with this account also failed ({message}); the service account needs admin access to register it.',
+    'Category path' => 'Category path',
+    'a Categories or Entries field handle — each related item written with its parents:' => 'a Categories or Entries field handle — each related item written with its parents:',
+    'The upload worked but the FTP server would not rename it into place.' => 'The upload worked but the FTP server would not rename it into place.',
+    'The upload worked but the SFTP server would not rename it into place.' => 'The upload worked but the SFTP server would not rename it into place.',
 ];

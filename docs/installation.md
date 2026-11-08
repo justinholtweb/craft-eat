@@ -35,9 +35,9 @@ Or find **Eat** in the Craft Plugin Store and install it from there.
 | --- | --- | --- |
 | Price | Free | $79, $59/year renewal |
 | Feeds | 2 | Unlimited |
-| Channels | Google, Meta | All fifteen, plus the custom builder |
+| Channels | Google, Meta | All sixteen, plus the custom builder |
 | Formats | RSS, XML, CSV, TSV, TXT, JSON, gzip | Same |
-| Attribute sources | Product attributes, custom fields, static values, taxonomy map | Adds Twig templates |
+| Attribute sources | Product attributes, custom fields, static values, taxonomy map, category paths | Adds Twig templates |
 | Output modifiers | — | Fourteen, chainable |
 | Product matching | Filters | Filters **and** Craft's condition builder |
 | Delivery | File, with a public URL | Adds asset volumes, FTP, SFTP, Google Merchant Center |

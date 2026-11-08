@@ -15,7 +15,7 @@ Eat is that plugin for Commerce:
 
 | | Hand-rolled Twig | Eat |
 |---|---|---|
-| Channel attributes | you read the spec | 15 built-in channel templates, required attributes pre-mapped |
+| Channel attributes | you read the spec | 16 built-in channel templates, required attributes pre-mapped |
 | Format | whatever you write | RSS 2.0, XML, CSV, TSV, TXT, JSON, optional gzip |
 | Value cleanup | filters, inline | 14 output modifiers per attribute, chained |
 | Category taxonomy | hard-coded strings | mapping screen, product type / category / field → channel taxonomy |
@@ -29,7 +29,7 @@ Eat is that plugin for Commerce:
 - **Lite (free)** — 2 feeds, the Google and Meta channels, every format, attribute mapping from
   product/variant attributes, custom fields, static values and the taxonomy map, catalogue filters,
   scheduled regeneration, file delivery with a public URL, the Twig API, last-run info.
-- **Pro ($79)** — unlimited feeds, all 15 channels **and** the custom template builder, output
+- **Pro ($79)** — unlimited feeds, all 16 channels **and** the custom template builder, output
   modifiers and conditional rules, Twig-template sources, the run log and its history, live feed
   route, asset-volume / FTP / SFTP delivery, Google Merchant Center Content API push, console
   commands, regenerate-on-save.

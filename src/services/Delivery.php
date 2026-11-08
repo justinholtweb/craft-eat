@@ -182,7 +182,30 @@ class Delivery extends Component
 
         try {
             $path = $this->_volumePath($feed);
-            $volume->getFs()->writeFileFromStream($path, $stream, []);
+            $staging = $path . '.tmp';
+            $fs = $volume->getFs();
+
+            // Staged and renamed, as the local file is. On a local filesystem that is an atomic
+            // rename(); on S3 and its kin it is a server-side copy, which replaces the object
+            // whole. Either way a channel fetching mid-run gets the previous feed.
+            $fs->writeFileFromStream($staging, $stream, []);
+            $fs->renameFile($staging, $path);
+
+            // Craft's local filesystem swallows a failed rename. Leaving the old feed in place
+            // would be a silent stale feed, so write it directly instead.
+            if ($fs->fileExists($staging)) {
+                $retry = fopen($tempPath, 'rb');
+
+                try {
+                    $fs->writeFileFromStream($path, $retry, []);
+                } finally {
+                    if (is_resource($retry)) {
+                        fclose($retry);
+                    }
+                }
+
+                $fs->deleteFile($staging);
+            }
 
             return ['mode' => self::MODE_VOLUME, 'ok' => true, 'path' => $path, 'url' => $this->getVolumeUrl($feed)];
         } catch (Throwable $e) {
@@ -234,8 +257,30 @@ class Delivery extends Component
 
             @ftp_pasv($connection, (bool)($config['passive'] ?? true));
 
-            if (!@ftp_put($connection, $remote, $tempPath, FTP_BINARY)) {
+            // Uploaded beside the target and renamed over it, so a channel fetching mid-upload
+            // gets the previous feed rather than the first half of this one.
+            $staging = $remote . '.tmp';
+
+            if (!@ftp_put($connection, $staging, $tempPath, FTP_BINARY)) {
+                @ftp_delete($connection, $staging);
+
                 return ['mode' => self::MODE_FTP, 'ok' => false, 'message' => Craft::t('eat', 'FTP upload failed.')];
+            }
+
+            // Unix servers rename over an existing file; some Windows servers refuse to, and
+            // need the old one deleted first. That leaves a moment with no file — a 404 the
+            // channel retries, never a truncated feed.
+            $renamed = @ftp_rename($connection, $staging, $remote);
+
+            if (!$renamed) {
+                @ftp_delete($connection, $remote);
+                $renamed = @ftp_rename($connection, $staging, $remote);
+            }
+
+            if (!$renamed) {
+                @ftp_delete($connection, $staging);
+
+                return ['mode' => self::MODE_FTP, 'ok' => false, 'message' => Craft::t('eat', 'The upload worked but the FTP server would not rename it into place.')];
             }
 
             return ['mode' => self::MODE_FTP, 'ok' => true, 'path' => $remote];
@@ -279,8 +324,32 @@ class Delivery extends Component
             return ['mode' => self::MODE_SFTP, 'ok' => false, 'message' => Craft::t('eat', 'SFTP login failed.')];
         }
 
-        if (!$sftp->put($remote, $tempPath, \phpseclib3\Net\SFTP::SOURCE_LOCAL_FILE)) {
+        $staging = $remote . '.tmp';
+
+        if (!$sftp->put($staging, $tempPath, \phpseclib3\Net\SFTP::SOURCE_LOCAL_FILE)) {
+            $sftp->delete($staging);
+
             return ['mode' => self::MODE_SFTP, 'ok' => false, 'message' => Craft::t('eat', 'SFTP upload failed.')];
+        }
+
+        // SFTP v3's rename refuses an existing target. OpenSSH's posix-rename extension replaces
+        // it atomically; without it, delete-then-rename leaves a moment with no file rather than
+        // a moment with half of one.
+        $renamed = method_exists($sftp, 'posix_rename') && $sftp->posix_rename($staging, $remote);
+
+        if (!$renamed) {
+            $renamed = $sftp->rename($staging, $remote);
+        }
+
+        if (!$renamed) {
+            $sftp->delete($remote);
+            $renamed = $sftp->rename($staging, $remote);
+        }
+
+        if (!$renamed) {
+            $sftp->delete($staging);
+
+            return ['mode' => self::MODE_SFTP, 'ok' => false, 'message' => Craft::t('eat', 'The upload worked but the SFTP server would not rename it into place.')];
         }
 
         return ['mode' => self::MODE_SFTP, 'ok' => true, 'path' => $remote];

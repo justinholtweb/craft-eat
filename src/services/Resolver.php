@@ -4,11 +4,14 @@ namespace justinholtweb\eat\services;
 
 use Craft;
 use craft\base\Component;
+use craft\base\Element;
 use craft\base\ElementInterface;
 use craft\commerce\elements\Product;
 use craft\commerce\elements\Variant;
 use craft\commerce\Plugin as Commerce;
 use craft\elements\Asset;
+use craft\elements\db\ElementQuery;
+use craft\elements\ElementCollection;
 use craft\fields\Assets as AssetsField;
 use craft\helpers\App;
 use justinholtweb\eat\helpers\Value;
@@ -28,11 +31,23 @@ class Resolver extends Component
     /** Field handles a product description is looked for in, in order, before falling back. */
     public const DESCRIPTION_HANDLES = ['description', 'productDescription', 'shortDescription', 'summary', 'excerpt', 'body', 'bodyContent'];
 
+    /** What a category path is joined with — Google's and TikTok's `product_type` convention. */
+    public const CATEGORY_SEPARATOR = ' > ';
+
     /** @var array<string, array<int, Asset>> */
     private array $_imageCache = [];
 
     /** @var array<int, string> */
     private array $_typeNames = [];
+
+    /**
+     * Category lineages, root first, keyed by element ID and site. A catalogue has thousands of
+     * products but a few dozen categories, so this stays small while saving an ancestors query
+     * per product.
+     *
+     * @var array<string, array<int, string>>
+     */
+    private array $_lineages = [];
 
     /**
      * Every value for one feed row.
@@ -76,6 +91,9 @@ class Resolver extends Component
 
             case Mapping::SOURCE_TAXONOMY:
                 return $this->taxonomyValue($feed, (string)($mapping->value ?: 'productType'), $product, $variant);
+
+            case Mapping::SOURCE_CATEGORY_PATH:
+                return $this->categoryPathValue((string)$mapping->value, $product, $variant);
 
             case Mapping::SOURCE_TEMPLATE:
                 // The escape hatch, and the only place a merchant's own code runs.
@@ -211,6 +229,95 @@ class Resolver extends Component
         return (string)($mapped ?? '');
     }
 
+    /**
+     * The related categories or structure entries in a relation field, each written as its full
+     * path: `Fiction > Crime > Nordic`. Variant fields win over product fields, as in
+     * `fieldValue()`.
+     *
+     * One path comes back as a string; several branches come back as an array, which an XML
+     * writer repeats and a CSV writer joins, like any other multi-value attribute.
+     */
+    public function categoryPathValue(string $handle, Product $product, ?Variant $variant): string|array
+    {
+        $handle = trim($handle);
+
+        if ($handle === '') {
+            return '';
+        }
+
+        foreach ([$variant, $product] as $element) {
+            if ($element === null || !$this->_hasField($element, $handle)) {
+                continue;
+            }
+
+            try {
+                $value = $element->getFieldValue($handle);
+            } catch (\Throwable) {
+                continue;
+            }
+
+            $related = match (true) {
+                $value instanceof ElementQuery => (clone $value)->all(),
+                $value instanceof ElementCollection => $value->all(),
+                is_array($value) => $value,
+                default => [],
+            };
+
+            $paths = $this->categoryPaths($related);
+
+            if ($paths !== []) {
+                return count($paths) === 1 ? $paths[0] : $paths;
+            }
+        }
+
+        return '';
+    }
+
+    /**
+     * Full paths for a set of related elements.
+     *
+     * A selection holding both `Fiction` and `Fiction > Crime` — which is what a Categories field
+     * with "Maintain hierarchy" stores — is one path, not two: an element that is an ancestor of
+     * another selected element is folded into its descendant's path.
+     *
+     * @param iterable<mixed> $elements
+     * @return string[]
+     */
+    public function categoryPaths(iterable $elements, string $separator = self::CATEGORY_SEPARATOR): array
+    {
+        $lineages = [];
+
+        foreach ($elements as $element) {
+            if ($element instanceof ElementInterface && $element->id) {
+                $lineages[$element->id] = $this->_lineage($element);
+            }
+        }
+
+        $ancestors = [];
+
+        foreach ($lineages as $lineage) {
+            foreach (array_slice(array_keys($lineage), 0, -1) as $id) {
+                $ancestors[$id] = true;
+            }
+        }
+
+        $paths = [];
+
+        foreach ($lineages as $id => $lineage) {
+            if (isset($ancestors[$id])) {
+                continue;
+            }
+
+            $path = implode($separator, array_filter($lineage, static fn(string $title) => $title !== ''));
+
+            if ($path !== '' && !in_array($path, $paths, true)) {
+                $paths[] = $path;
+            }
+        }
+
+        return $paths;
+    }
+
     public function templateValue(string $template, Product $product, ?Variant $variant): string
     {
         if ($template === '') {
@@ -269,6 +376,7 @@ class Resolver extends Component
     {
         $this->_imageCache = [];
         $this->_typeNames = [];
+        $this->_lineages = [];
     }
 
     // Private
@@ -428,6 +536,48 @@ class Resolver extends Component
         }
 
         return $handles;
+    }
+
+    /**
+     * An element and its structure ancestors, root first, as ID => title.
+     *
+     * @return array<int, string>
+     */
+    private function _lineage(ElementInterface $element): array
+    {
+        $key = $element->id . ':' . $element->siteId;
+
+        if (isset($this->_lineages[$key])) {
+            return $this->_lineages[$key];
+        }
+
+        $chain = [];
+
+        // A channel entry or a tag has no structure, and so no ancestors: its path is itself.
+        if ($element instanceof Element && $element->structureId) {
+            try {
+                $ancestors = $element->getAncestors();
+                // Disabled parents still name the branch a product sits in.
+                $ancestors = $ancestors instanceof ElementQuery ? $ancestors->status(null)->all() : $ancestors->all();
+
+                foreach ($ancestors as $ancestor) {
+                    $chain[$ancestor->id] = $this->_label($ancestor);
+                }
+            } catch (\Throwable) {
+                $chain = [];
+            }
+        }
+
+        $chain[$element->id] = $this->_label($element);
+
+        return $this->_lineages[$key] = $chain;
+    }
+
+    private function _label(ElementInterface $element): string
+    {
+        $label = Value::stringify($element);
+
+        return trim(is_array($label) ? implode(' ', $label) : $label);
     }
 
     private function _hasField(ElementInterface $element, string $handle): bool

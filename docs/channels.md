@@ -2,7 +2,7 @@
 title: Channels & formats
 slug: channels
 order: 35
-summary: The fifteen built-in channel templates, what each expects, and how to build one that isn't here.
+summary: The sixteen built-in channel templates, what each expects, and how to build one that isn't here.
 ---
 
 ## The channels
@@ -11,6 +11,7 @@ summary: The fifteen built-in channel templates, what each expects, and how to b
 | --- | --- | --- | --- |
 | Google Shopping | RSS 2.0 | `id` | Merchant Center primary feed, `g:` namespace |
 | Google Local Inventory | CSV | `id` | Per-store availability and price; needs `store_code` |
+| Google Ads dynamic remarketing | CSV | `ID` | Google Ads "Custom" business data, not the Merchant Center feed. `ID` must match what your remarketing tag sends |
 | Meta (Facebook & Instagram) | CSV | `id` | Commerce Manager catalog |
 | Pinterest | RSS 2.0 | `id` | Catalogs data source |
 | Microsoft (Bing) Shopping | TSV | `id` | Microsoft Merchant Center |

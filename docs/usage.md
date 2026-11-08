@@ -30,7 +30,15 @@ certainly mean, so the work is filling the handful your catalogue models differe
 | Custom field | A field handle, optionally with a path: `gallery.0.url` |
 | Static value | The literal text, written in every row |
 | Taxonomy map | `productType`, or a field handle to map from |
+| Category path | A Categories or Entries field handle. Each related item is written with its parents: `Fiction > Crime > Nordic` |
 | Twig template (Pro, admins) | `{{ object.product.myField }}` — `object` is the variant. Only admins write these |
+
+**Category path** is for Google's and TikTok's `product_type`, and for anything else that wants the
+breadcrumb rather than the leaf. The field can relate categories or entries in a Structure section.
+A selection that already holds the parents — which is what a Categories field with *Maintain
+hierarchy* stores — still comes out as one path. Products in two branches get two paths, which XML
+repeats as two elements and CSV joins like any other list. Disabled parents still count, because
+they still name the branch the product sits in.
 
 **Twig templates are written by admins.** A template runs with the full power of Twig — it can
 reach anything on `craft.app` — and its output is published in the feed. So since 5.0.1 only an

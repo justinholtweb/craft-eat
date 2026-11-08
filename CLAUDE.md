@@ -3,7 +3,7 @@
 ## Project Overview
 
 Eat generates product feeds from Craft Commerce for merchant channels — Google Shopping, Meta,
-Pinterest, Microsoft, TikTok and eleven more — and delivers them wherever the channel wants them.
+Pinterest, Microsoft, TikTok and twelve more — and delivers them wherever the channel wants them.
 Distributed as `justinholtweb/craft-eat`. **Lite (free) + Pro ($79).**
 
 ## Why it exists
@@ -121,7 +121,7 @@ No local PHP on this Mac. Everything runs inside the plugin-testing container:
 
 ```sh
 cd ~/Sites/plugin-testing
-ddev exec php /var/www/craft-eat/tests/integration/checks.php                     # 112 checks
+ddev exec php /var/www/craft-eat/tests/integration/checks.php                     # 119 checks
 docker exec -w /var/www/html ddev-plugin-testing-web php /var/www/craft-eat/tests/integration/security.php   # 8: template guard over HTTP, live-route lock
 docker exec -w /sites/craft-eat ddev-phpstan-runner-web bash -c 'vendor/bin/phpstan analyse --memory-limit=1G && vendor/bin/ecs check'
 bash ~/Sites/craft-eat/tests/smoke.sh   # 16 CP checks — from the HOST (the container can't reach the router's hostname)

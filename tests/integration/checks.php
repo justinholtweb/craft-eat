@@ -68,6 +68,7 @@ $originalEdition = $plugin->edition;
 $createdProducts = [];
 $createdFeeds = [];
 $createdFiles = [];
+$createdCategories = [];
 $taxonomyKeys = [];
 
 function switchEdition(string $edition): void
@@ -153,7 +154,7 @@ try {
 
     $channels = Registry::all();
 
-    check('every advertised channel is defined', fn() => count($channels) === 15 ?: 'got ' . count($channels));
+    check('every advertised channel is defined', fn() => count($channels) === 16 ?: 'got ' . count($channels));
 
     check('each definition is complete', function() use ($channels) {
         foreach ($channels as $id => $channel) {
@@ -240,6 +241,23 @@ try {
             && $channels['meta']->availabilityWord('in') === 'in stock'
             && $channels['criteo']->availabilityWord('out') === 'false'
             ?: 'availability wording is wrong';
+    });
+
+    check('the Google Ads business-data preset uses Google Ads’ own column names', function() use ($channels) {
+        $ads = $channels['google_ads'] ?? null;
+
+        if ($ads === null) {
+            return 'no google_ads channel';
+        }
+
+        $required = $ads->getRequiredKeys();
+        sort($required);
+
+        return $required === ['Final URL', 'ID', 'Item title']
+            && $ads->formats === ['csv', 'tsv']
+            && !$ads->isNamespaced('ID')
+            && $ads->getAttributeDef('Sale price')['value'] === 'promotionalPriceWithCurrency'
+            ?: Json::encode(['required' => $required, 'formats' => $ads->formats]);
     });
 
     check('default mappings cover every attribute', function() use ($channels) {
@@ -690,6 +708,113 @@ try {
         return !isset($rows[0]['nonsense']) ?: 'a value appeared from nowhere';
     });
 
+    // Category paths. The harness's product type has no relation field, so the path builder is
+    // exercised against real nested categories, and the mapping source for the field lookup.
+    $categoryGroup = Craft::$app->getCategories()->getGroupByHandle('category')
+        ?? (Craft::$app->getCategories()->getAllGroups()[0] ?? null);
+    $categories = [];
+
+    $makeCategory = function(string $title, ?craft\elements\Category $parent = null, bool $enabled = true) use ($categoryGroup, &$categories) {
+        global $createdCategories;
+
+        $category = new craft\elements\Category();
+        $category->groupId = $categoryGroup->id;
+        $category->title = $title;
+        $category->enabled = $enabled;
+
+        if ($parent !== null) {
+            $category->setParentId($parent->id);
+        }
+
+        if (!Craft::$app->getElements()->saveElement($category)) {
+            throw new RuntimeException('Could not save fixture category: ' . Json::encode($category->getErrors()));
+        }
+
+        $createdCategories[] = $category;
+
+        return $category;
+    };
+
+    if ($categoryGroup !== null) {
+        $fiction = $makeCategory('Eat Fiction');
+        $crime = $makeCategory('Eat Crime', $fiction, false);
+        $nordic = $makeCategory('Eat Nordic', $crime);
+        $poetry = $makeCategory('Eat Poetry');
+        $plugin->getResolver()->clearCaches();
+
+        check('a category path walks up to the root', function() use ($plugin, $nordic) {
+            $paths = $plugin->getResolver()->categoryPaths([craft\elements\Category::find()->id($nordic->id)->status(null)->one()]);
+
+            // Eat Crime is disabled: a disabled parent still names the branch.
+            return $paths === ['Eat Fiction > Eat Crime > Eat Nordic'] ?: Json::encode($paths);
+        });
+
+        check('a selection with its own ancestors is one path, not three', function() use ($plugin, $fiction, $crime, $nordic) {
+            $elements = craft\elements\Category::find()->id([$fiction->id, $crime->id, $nordic->id])->status(null)->all();
+            $paths = $plugin->getResolver()->categoryPaths($elements);
+
+            return $paths === ['Eat Fiction > Eat Crime > Eat Nordic'] ?: Json::encode($paths);
+        });
+
+        check('two branches give two paths', function() use ($plugin, $nordic, $poetry) {
+            $elements = craft\elements\Category::find()->id([$nordic->id, $poetry->id])->status(null)->fixedOrder()->all();
+            $paths = $plugin->getResolver()->categoryPaths($elements);
+
+            return $paths === ['Eat Fiction > Eat Crime > Eat Nordic', 'Eat Poetry'] ?: Json::encode($paths);
+        });
+    } else {
+        echo "  - no category group in the harness; category path builder not exercised\n";
+    }
+
+    check('a category path from a field the product does not have is empty, not an error', function() use ($plugin, $csvFeed, $productA) {
+        $mapping = new Mapping(['attribute' => 'product_type', 'source' => Mapping::SOURCE_CATEGORY_PATH, 'value' => 'noSuchField', 'enabled' => true]);
+        $value = $plugin->getResolver()->resolveMapping($csvFeed, Registry::get('google'), $mapping, $productA, $productA->getDefaultVariant());
+
+        return $value === '' ?: Json::encode($value);
+    });
+
+    check('the Google Ads preset writes its CSV header and prices with a currency', function() use ($plugin, $limitToFixtures) {
+        global $createdFiles;
+
+        $feed = makeFeed(['channel' => 'google_ads', 'format' => 'csv']);
+        $limitToFixtures($feed);
+
+        // The harness's product type has no URLs, and Final URL is required: without a stand-in
+        // every row is rightly skipped.
+        $mappings = array_map(static fn(Mapping $m) => $m->toConfig(), $feed->getMappings());
+
+        foreach ($mappings as &$mapping) {
+            if ($mapping['attribute'] === 'Final URL') {
+                $mapping['source'] = Mapping::SOURCE_STATIC;
+                $mapping['value'] = 'https://example.com/p';
+            }
+        }
+
+        unset($mapping);
+        $feed->setMappings($mappings);
+        $plugin->getFeeds()->saveFeed($feed);
+        $run = $plugin->getFeeds()->run($feed, 'test');
+        $createdFiles[] = $feed->getFilePath();
+
+        if ($run->getIsError()) {
+            return 'run failed: ' . $run->message;
+        }
+
+        $lines = file($feed->getFilePath(), FILE_IGNORE_NEW_LINES) ?: [];
+        $header = str_getcsv($lines[0] ?? '', ',', '"', '');
+        $rows = [];
+
+        foreach (array_slice($lines, 1) as $line) {
+            $row = array_combine($header, str_getcsv($line, ',', '"', ''));
+            $rows[$row['ID']] = $row;
+        }
+
+        return array_slice($header, 0, 4) === ['ID', 'Item title', 'Final URL', 'Image URL']
+            && ($rows['EAT-B-0']['Sale price'] ?? null) === '3.50 ' . $plugin->getResolver()->currency($feed)
+            && ($rows['EAT-A']['Sale price'] ?? null) === ''
+            ?: Json::encode(['header' => $header, 'rows' => $rows]);
+    });
+
     check('every documented attribute resolves without an error', function() use ($plugin, $csvFeed, $productA) {
         $resolver = $plugin->getResolver();
         $channel = Registry::get('google');
@@ -934,6 +1059,38 @@ try {
         }
 
         return str_contains((string)$run->message, 'volume') ?: 'message is ' . $run->message;
+    });
+
+    check('a volume delivery is staged and renamed, and replaces the previous feed', function() use ($plugin) {
+        $volume = Craft::$app->getVolumes()->getAllVolumes()[0] ?? null;
+
+        if ($volume === null) {
+            return true;
+        }
+
+        $feed = makeFeed(['channel' => 'custom', 'format' => 'csv']);
+        $feed->setDelivery(['mode' => 'volume', 'volumeId' => $volume->id, 'volumePath' => 'eat-check']);
+        $plugin->getFeeds()->saveFeed($feed);
+        $fs = $volume->getFs();
+        $path = 'eat-check/' . $feed->getFileName();
+
+        try {
+            $fs->write($path, "stale\n", []);
+            $run = $plugin->getFeeds()->run($feed, 'test');
+            $body = $fs->read($path);
+
+            return $run->status === Run::STATUS_SUCCESS
+                && !$fs->fileExists($path . '.tmp')
+                && !str_contains($body, 'stale')
+                && str_contains($body, 'id,')
+                ?: Json::encode(['status' => $run->status, 'message' => $run->message, 'staging' => $fs->fileExists($path . '.tmp'), 'body' => substr($body, 0, 80)]);
+        } finally {
+            try {
+                $fs->deleteFile($path);
+                $fs->deleteDirectory('eat-check');
+            } catch (Throwable) {
+            }
+        }
     });
 
     check('the local file is still written when the remote destination fails', function() use ($plugin) {
@@ -1529,6 +1686,15 @@ try {
             Craft::$app->getElements()->deleteElement($product, true);
         } catch (Throwable $e) {
             echo "  ! could not delete product {$product->id}: {$e->getMessage()}\n";
+        }
+    }
+
+    // Children first, so deleting a parent never takes a child's structure position with it.
+    foreach (array_reverse($createdCategories) as $category) {
+        try {
+            Craft::$app->getElements()->deleteElement($category, true);
+        } catch (Throwable $e) {
+            echo "  ! could not delete category {$category->id}: {$e->getMessage()}\n";
         }
     }
 

@@ -24,6 +24,7 @@ abstract class Registry
         return [
             'google' => self::_google(),
             'google_local' => self::_googleLocal(),
+            'google_ads' => self::_googleAds(),
             'meta' => self::_meta(),
             'pinterest' => self::_pinterest(),
             'bing' => self::_bing(),
@@ -559,6 +560,50 @@ abstract class Registry
                 self::attr('shipping-cost', 'Shipping cost'),
                 self::attr('ean', 'EAN'),
                 self::attr('mpn', 'MPN', false, 'attribute', 'sku'),
+            ],
+        ];
+    }
+
+    /**
+     * Google Ads dynamic remarketing, "Custom" business data. Google Ads does not read the
+     * Merchant Center feed for this: it takes its own spreadsheet, with its own column names, and
+     * the ID has to match what the site's remarketing tag sends.
+     */
+    private static function _googleAds(): array
+    {
+        return [
+            'name' => 'Google Ads dynamic remarketing (business data)',
+            'description' => 'Google Ads “Custom” business data feed for dynamic remarketing and display ads.',
+            'docsUrl' => 'https://support.google.com/google-ads/answer/6053288',
+            'formats' => ['csv', 'tsv'],
+            'defaultFormat' => 'csv',
+            'rss' => false,
+            'xmlRoot' => 'products',
+            'xmlItem' => 'product',
+            'namespaces' => [],
+            'prefix' => null,
+            'availability' => ['in' => 'in stock', 'out' => 'out of stock', 'preorder' => 'preorder', 'backorder' => 'backorder'],
+            'condition' => 'new',
+            'taxonomyAttribute' => null,
+            'attributes' => [
+                self::attr('ID', 'ID', true, 'attribute', 'sku', false, 'Must match the ID your remarketing tag sends.'),
+                self::attr('ID2', 'ID2', false, 'attribute', null, false),
+                self::attr('Item title', 'Item title', true, 'attribute', 'title', false),
+                self::attr('Final URL', 'Final URL', true, 'attribute', 'url', false),
+                self::attr('Image URL', 'Image URL', false, 'attribute', 'imageUrl', false),
+                self::attr('Item subtitle', 'Item subtitle', false, 'attribute', null, false),
+                self::attr('Item description', 'Item description', false, 'attribute', 'plainDescription', false),
+                self::attr('Item category', 'Item category', false, 'attribute', 'productTypeName', false),
+                self::attr('Price', 'Price', false, 'attribute', 'priceWithCurrency', false, 'A number and a currency code: 19.99 USD.'),
+                self::attr('Sale price', 'Sale price', false, 'attribute', 'promotionalPriceWithCurrency', false),
+                self::attr('Formatted price', 'Formatted price', false, 'attribute', null, false),
+                self::attr('Formatted sale price', 'Formatted sale price', false, 'attribute', null, false),
+                self::attr('Contextual keywords', 'Contextual keywords', false, 'attribute', null, false, 'Separated by semicolons.'),
+                self::attr('Item address', 'Item address', false, 'attribute', null, false),
+                self::attr('Similar IDs', 'Similar IDs', false, 'attribute', null, false),
+                self::attr('Final mobile URL', 'Final mobile URL', false, 'attribute', null, false),
+                self::attr('Tracking template', 'Tracking template', false, 'attribute', null, false),
+                self::attr('Custom parameter', 'Custom parameter', false, 'attribute', null, false),
             ],
         ];
     }

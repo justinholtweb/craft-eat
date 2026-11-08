@@ -15,6 +15,7 @@ class Mapping extends Model
     public const SOURCE_FIELD = 'field';
     public const SOURCE_STATIC = 'static';
     public const SOURCE_TAXONOMY = 'taxonomy';
+    public const SOURCE_CATEGORY_PATH = 'categoryPath';
     public const SOURCE_TEMPLATE = 'template';
 
     /** The channel attribute this fills, e.g. `image_link`. */
@@ -39,6 +40,7 @@ class Mapping extends Model
             self::SOURCE_FIELD => 'Custom field',
             self::SOURCE_STATIC => 'Static value',
             self::SOURCE_TAXONOMY => 'Taxonomy map',
+            self::SOURCE_CATEGORY_PATH => 'Category path',
             self::SOURCE_TEMPLATE => 'Twig template',
             self::SOURCE_NONE => 'Leave out',
         ];
